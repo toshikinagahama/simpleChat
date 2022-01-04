@@ -5,7 +5,7 @@ import { countState, userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 
 export default function Home(pageProps) {
-  const [count, setCount] = useRecoilState(countState);
+  const [username, setUsername] = useState("");
   const [user, setUser] = useRecoilState(userState);
   useEffect(() => {
     setTimeout(() => {
@@ -23,30 +23,27 @@ export default function Home(pageProps) {
     }, 5000);
   }, []);
 
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+    // console.log(username);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
         <title>Simple Chat sample</title>
-        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <p>{user.age}</p>
-        <Link href="/rooms/room1">
-          <a>room1</a>
+        <div className='m-4'><p>input your name</p></div>
+        <input className='border-2' value={username} onChange={handleUsernameChange}/>
+        <div className='m-8'>
+        <Link href="/users/0">
+          <a className='text-2xl'>Login</a>
         </Link>
+        </div>
       </main>
 
-      <footer className="flex items-center justify-center w-full h-24 border-t">
-        <a
-          className="flex items-center justify-center"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by <img src="/vercel.svg" alt="Vercel Logo" className="h-4 ml-2" />
-        </a>
-      </footer>
     </div>
   );
 }

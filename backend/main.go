@@ -130,7 +130,9 @@ func main() {
 	}
 	defer db.Close()
 
-	//db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Room{})
+	db.AutoMigrate(&model.Message{})
 	//db.Create(&model.User{Name: "toshiki", Password: "toshiki"})
 	// var currentUser model.User
 	// db.First(&currentUser)
