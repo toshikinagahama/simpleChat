@@ -1,16 +1,15 @@
-import { atom } from "recoil";
+import { atom } from 'recoil';
 
 //count
 export const countState = atom({
-    key: "count",
-    default: 0
+  key: 'count',
+  default: 0,
 });
 
 //user
 export const userState = atom({
-    key: "user",
-    default: {
-        name: "hoge",
-        age: 11
-    }
+  key: 'user',
+  default: {
+    name: '',
+  },
 });

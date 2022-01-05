@@ -1,26 +1,16 @@
-import Link from 'next/link'
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-export default ({ post }) => {
-    console.log(post);
+export default ({}) => {
+  const router = useRouter();
+  const { id } = router.query;
+  console.log(router.query);
   return (
     <div>
+      <p>User: {id}</p>
       <Link href="/">
-
         <a>Back</a>
       </Link>
     </div>
-  )
-}
-
-export const getStaticPaths = async () => {
-    let paths = [{params: {id: "0"}}, {params: {id: "1"}}, {params: {id: "2"}}, {params: {id: "3"}}, {params: {id: "4"}}, {params: {id: "5"}}];
-  return { paths, fallback: false }
-}
-
-export const getStaticProps = async ({ params }) => {
-  return {
-    props: {
-        post: {id: params.id}
-    },
-  }
-}
+  );
+};

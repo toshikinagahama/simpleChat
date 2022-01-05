@@ -3,6 +3,7 @@ package main
 import (
 	"chat/config"
 	"chat/model"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -46,38 +47,74 @@ func websocketHandler(c echo.Context) error {
 	return nil
 }
 
-func getUsers(c echo.Context) error {
-	users := []model.User{}
-	db.Find(&users)
-	return c.JSON(http.StatusOK, users)
-}
+// func getAllUsers(c echo.Context) error {
+// 	users := []model.User{}
+// 	db.Find(&users)
+// 	return c.JSON(http.StatusOK, users)
+// }
 
-func createUser(c echo.Context) error {
-	user := model.User{}
-	if err := c.Bind(&user); err != nil {
+func getUser(c echo.Context) error {
+	// c.Request().Header.Set("Access-Control-Allow-Origin", c.Request().RemoteAddr)
+	// c.Request().Header.Set("Access-Control-Allow-Credentials", "true")
+	// c.Request().Header.Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	// c.Request().Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
 		return err
-	}
-	if user.Name != "" && user.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		user.Password = string(hash)
-		db.Create(&user)
-		return c.JSON(http.StatusCreated, user)
 	} else {
-		map_data := map[string]interface{}{
-			"result": "error 1",
+		//json_map has the JSON Payload decoded into a map
+		name := json_map["username"]
+		password := json_map["password"]
+		var user model.User
+		err := db.Where("name = ?", name).First(&user).Error
+		if err != nil {
+			return c.JSON(http.StatusNotFound, nil)
+		} else {
+			if user.Password == password {
+				user.Password = ""
+				return c.JSON(http.StatusOK, user)
+			} else {
+				return c.JSON(http.StatusNotFound, nil)
+			}
 		}
-		return c.JSON(http.StatusOK, map_data)
 	}
+	// if name := c.Param("name"); name != "" {
+	// 	var user model.User
+	// 	db.Where("name = ?", name).First(&user)
+	// 	return c.JSON(http.StatusOK, user)
+	// } else {
+	// 	return c.JSON(http.StatusNotFound, nil)
+	// }
 }
 
-func deleteUser(c echo.Context) error {
-	id := c.Param("id")
-	db.Delete(&model.User{}, id)
-	return c.NoContent(http.StatusNoContent)
-}
+// func createUser(c echo.Context) error {
+// 	user := model.User{}
+// 	if err := c.Bind(&user); err != nil {
+// 		return err
+// 	}
+// 	if user.Name != "" && user.Password != "" {
+// 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		user.Password = string(hash)
+// 		db.Create(&user)
+// 		return c.JSON(http.StatusCreated, user)
+// 	} else {
+// 		map_data := map[string]interface{}{
+// 			"result": "error 1",
+// 		}
+// 		return c.JSON(http.StatusOK, map_data)
+// 	}
+// }
+
+// func deleteUser(c echo.Context) error {
+// 	id := c.Param("id")
+// 	db.Delete(&model.User{}, id)
+// 	return c.NoContent(http.StatusNoContent)
+// }
 
 type jwtCustomClaims struct {
 	Name string `json:"name"`
@@ -88,6 +125,7 @@ func login(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	var user model.User
+
 	db.Where("name = ?", username).Find(&user)
 	fmt.Println(user)
 	auth_err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
@@ -136,17 +174,18 @@ func main() {
 	//db.Create(&model.User{Name: "toshiki", Password: "toshiki"})
 	// var currentUser model.User
 	// db.First(&currentUser)
-
 	// fmt.Println(currentUser)
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "../frontend")
 	e.GET("/ws", websocketHandler)
-	e.GET("/users", getUsers)
-	e.POST("/create_user", createUser)
-	e.POST("/delte_user", deleteUser)
+	//e.GET("/users", getAllUsers)
+	e.POST("/get_user", getUser)
+	// e.POST("/create_user", createUser)
+	// e.POST("/delte_user", deleteUser)
 	e.POST("/login", login)
 	r := e.Group("/restricted")
 
