@@ -13,3 +13,8 @@ export const userState = atom({
     name: '',
   },
 });
+
+export const socketState = atom({
+  key: 'socket',
+  default: null,
+});

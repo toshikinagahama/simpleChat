@@ -42,6 +42,26 @@ func websocketHandler(c echo.Context) error {
 				break
 			}
 			fmt.Printf("%s\n", msg)
+			json_map := make(map[string]interface{})
+			err = json.Unmarshal([]byte(msg), &json_map)
+
+			if err != nil {
+			} else {
+				command_data := json_map["command"]
+				command, _ := command_data.(string)
+				message_data := json_map["message"]
+				message, _ := message_data.(string)
+				user_id_data := json_map["user_id"]
+				user_id, _ := user_id_data.(uint)
+
+				fmt.Println(command)
+				fmt.Println(message)
+				fmt.Println(user_id)
+
+				if command == "1" {
+					db.Create(&model.Message{Message: message, UserID: user_id, RoomID: 1})
+				}
+			}
 		}
 	}).ServeHTTP(c.Response(), c.Request())
 	return nil
@@ -171,6 +191,7 @@ func main() {
 	db.AutoMigrate(&model.User{})
 	db.AutoMigrate(&model.Room{})
 	db.AutoMigrate(&model.Message{})
+	//db.Create(&model.Room{Name: "0", Password: ""})
 	//db.Create(&model.User{Name: "toshiki", Password: "toshiki"})
 	// var currentUser model.User
 	// db.First(&currentUser)
