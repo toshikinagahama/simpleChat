@@ -174,7 +174,7 @@ func main() {
 	//db.Create(&model.User{Name: "toshiki", Password: "toshiki"})
 	// var currentUser model.User
 	// db.First(&currentUser)
-	// fmt.Println(currentUser)
+	// fmt.Println(currentUser)a
 
 	e := echo.New()
 	e.Use(middleware.CORS())
