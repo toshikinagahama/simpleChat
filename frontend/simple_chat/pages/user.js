@@ -38,13 +38,18 @@ export default function User(pageProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
-        <title>Home</title>
+        <title>部屋一覧</title>
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
+      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">
         <div className="m-4 w-full">
           <p>Hi! {user.Name}</p>
         </div>
+        {user.rooms.map((room, index) => (
+          <Link href={'/user'} key={index}>
+            <a>{room.name}</a>
+          </Link>
+        ))}
         <textarea className="border-2 w-full" value={message} onChange={handleMessageChange} />
         <div className="m-8">
           <button className="text-2xl" onClick={handleSendBtnClick}>

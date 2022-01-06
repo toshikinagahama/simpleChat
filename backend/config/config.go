@@ -18,7 +18,7 @@ func Load() (*Config, error) {
 
 	err := viper.ReadInConfig() // 設定ファイルを探索して読み取る
 	if err != nil {
-		return nil, fmt.Errorf("設定ファイル読み込みエラー: %s \n", err)
+		return nil, fmt.Errorf("failed to load config file: %s \n", err)
 	}
 
 	var cfg Config
