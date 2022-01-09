@@ -12,7 +12,8 @@ export default function Home(pageProps) {
   const [user, setUser] = useRecoilState(userState);
   const [socket, setSocket] = useRecoilState(socketState);
   useEffect(() => {
-    setSocket(new WebSocket('ws://localhost:1323/ws'));
+    setSocket(new WebSocket('ws://192.168.10.17:1323/ws'));
+    // setSocket(new WebSocket('ws://localhost:1323/ws'));
     // 接続
     // setTimeout(() => {
     //   }, 5000);
@@ -42,7 +43,7 @@ export default function Home(pageProps) {
   };
 
   const handleLoginBtnClick = async (e) => {
-    const res = await fetch('http://localhost:1323/get_user', {
+    const res = await fetch('http://192.168.10.17:1323/get_user', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
