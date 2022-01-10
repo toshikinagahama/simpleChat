@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	jwtv3 "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/labstack/echo"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/websocket"
 )
 
@@ -59,7 +59,7 @@ func Websocket(c echo.Context) error {
 	return nil
 }
 
-func GetUser(c echo.Context) error {
+func Login(c echo.Context) error {
 	db := database.GetDB()
 
 	json_map := make(map[string]interface{})
@@ -67,7 +67,6 @@ func GetUser(c echo.Context) error {
 	if err != nil {
 		return err
 	} else {
-		//json_map has the JSON Payload decoded into a map
 		name := json_map["username"]
 		password := json_map["password"]
 		var user model.User
@@ -83,7 +82,24 @@ func GetUser(c echo.Context) error {
 					}
 
 				}
-				return c.JSON(http.StatusOK, user)
+				claims := &model.JwtCustomClaims{
+					user.ID,
+					user.Name,
+					jwtv3.StandardClaims{
+						ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+					},
+				}
+				token := jwtv3.NewWithClaims(jwt.SigningMethodHS256, claims)
+				t, err := token.SignedString([]byte("toshiki.nagahama.satomi.0819"))
+				if err != nil {
+					return err
+				}
+
+				return c.JSON(http.StatusOK, echo.Map{
+					"token": t,
+				})
+
+				// return c.JSON(http.StatusOK, user)
 			} else {
 				return c.JSON(http.StatusNotFound, nil)
 			}
@@ -112,43 +128,79 @@ func GetUser(c echo.Context) error {
 // 	}
 // }
 
-// func deleteUser(c echo.Context) error {
-// 	id := c.Param("id")
-// 	db.Delete(&model.User{}, id)
-// 	return c.NoContent(http.StatusNoContent)
-// }
-
-func Login(c echo.Context) error {
+func GetAuthenticatedUser(c echo.Context) error {
 	db := database.GetDB()
-	username := c.FormValue("username")
-	password := c.FormValue("password")
-	var user model.User
 
-	db.Where("name = ?", username).Find(&user)
-	fmt.Println(user)
-	auth_err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if auth_err != nil {
-		return echo.ErrUnauthorized
-	}
-	claims := &model.JwtCustomClaims{
-		username,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte("toshiki.nagahama.satomi.0819"))
+	user := c.Get("user").(*jwtv3.Token)
+	claims := user.Claims.(*model.JwtCustomClaims)
+	id := claims.ID
+	name := claims.Name
+
+	var auth_user model.User
+	err := db.First(&auth_user, id).Error
+	fmt.Println(auth_user)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": "-1",
+		})
 	}
-
 	return c.JSON(http.StatusOK, echo.Map{
-		"token": t,
+		"result": "1",
+		"id":     id,
+		"icon":   auth_user.Icon,
+		"name":   name,
+	})
+}
+
+func GetUsers(c echo.Context) error {
+	db := database.GetDB()
+
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": err,
+		})
+
+	} else {
+		fmt.Println(json_map["user_ids"])
+		user_ids := json_map["user_ids"]
+		var users []model.APIUser
+		err = db.Model(&model.User{}).Find(&users, user_ids).Error
+		if err != nil {
+			return c.JSON(http.StatusOK, echo.Map{
+				"result": "-1",
+			})
+		}
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": "1",
+			"users":  users,
+		})
+	}
+}
+
+func GetRooms(c echo.Context) error {
+	db := database.GetDB()
+
+	user := c.Get("user").(*jwtv3.Token)
+	claims := user.Claims.(*model.JwtCustomClaims)
+	id := claims.ID
+	var auth_user model.User
+	err := db.Debug().Preload("Rooms").First(&auth_user, id).Error
+
+	//fmt.Println(rooms)
+	fmt.Println(auth_user.Rooms)
+	if err != nil {
+		panic(err)
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": "ok",
+		"room":   auth_user.Rooms,
 	})
 }
 
 func Restricted(c echo.Context) error {
-	user := c.Get("user").(*jwt.Token)
+	user := c.Get("user").(*jwtv3.Token)
 	claims := user.Claims.(*model.JwtCustomClaims)
 	name := claims.Name
 	return c.String(http.StatusOK, "Welcome "+name+"!")
