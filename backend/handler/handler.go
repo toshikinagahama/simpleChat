@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"chat/config"
 	"chat/database"
 	"chat/model"
 	"encoding/json"
@@ -11,48 +12,156 @@ import (
 	jwtv3 "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/labstack/echo"
+	"github.com/lib/pq"
 	"golang.org/x/net/websocket"
 )
 
+// Parse は jwt トークンから元になった認証情報を取り出す。
+func getAuthenticate(tokenstring string) (*model.Auth, error) {
+	cfg, err := config.Load()
+
+	token, err := jwt.Parse(tokenstring, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.SercretKey), nil
+	})
+
+	if err != nil {
+		if ve, ok := err.(*jwtv3.ValidationError); ok {
+			if ve.Errors&jwtv3.ValidationErrorExpired != 0 {
+				return nil, fmt.Errorf("%s is expired", tokenstring)
+			} else {
+				return nil, fmt.Errorf("%s is invalid", tokenstring)
+			}
+		} else {
+			return nil, fmt.Errorf("%s is invalid", tokenstring)
+		}
+	}
+
+	if token == nil {
+		return nil, fmt.Errorf("not found token in %s:", tokenstring)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	userID, ok := claims["id"].(float64)
+	if !ok {
+		return nil, fmt.Errorf("not found id in %s:", tokenstring)
+	}
+
+	return &model.Auth{
+		UserID: (uint)(userID),
+	}, nil
+}
+
 func Websocket(c echo.Context) error {
+	// db := database.GetDB()
+
 	websocket.Handler(func(ws *websocket.Conn) {
 		defer ws.Close()
-		for {
-			// Write
-			err := websocket.Message.Send(ws, "Hello, Client!")
+		// Write
+		err := websocket.Message.Send(ws, "Hello, Client!")
+		if err != nil {
+			c.Logger().Error(err)
+		}
+		//最初に認証の処理を行う
+		fmt.Println("websocket authenticate start")
+		token := ""
+		err = websocket.Message.Receive(ws, &token)
+		if err != nil {
+			panic(err)
+		}
+		auth, err2 := getAuthenticate(token)
+		fmt.Println("websocket authenticate end")
+		if err2 != nil {
+			panic(err2)
+		}
+		fmt.Println(auth.UserID)
+		if auth != nil {
+			reportProblem := func(ev pq.ListenerEventType, err error) {
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+			}
+			cfg, err := config.Load()
+			listener := pq.NewListener(cfg.DBConnect, 10*time.Second, time.Minute, reportProblem)
+			err = listener.Listen("messages")
 			if err != nil {
-				c.Logger().Error(err)
+				panic(err)
 			}
 
-			// Read
-			msg := ""
-			err = websocket.Message.Receive(ws, &msg)
-			if err != nil {
-				c.Logger().Error(err)
-				break
-			}
-			fmt.Printf("%s\n", msg)
-			json_map := make(map[string]interface{})
-			err = json.Unmarshal([]byte(msg), &json_map)
+			go func() {
+				for {
+					select {
+					case n := <-listener.Notify:
+						type Result struct {
+							ID        uint      `json:"ID"`
+							CreatedAt time.Time `json:"CreatedAt"`
+							UpdatedAt time.Time `json:"UpdatedAt"`
+							DeletedAt time.Time `json:"DeletedAt"`
+							UserID    uint      `json:"user_id"`
+							RoomID    uint      `json:"room_id"`
+							ReadCount uint      `json:"read_count"`
+							Message   string    `json:"message"`
+						}
+						var res Result
+						fmt.Println(n.Extra)
+						err = json.Unmarshal([]byte(n.Extra), &res)
+						if auth.UserID != res.UserID {
+							continue
+						}
+						if err != nil {
+							fmt.Println(err)
+						}
+						res_json := echo.Map{
+							"command": 1,
+							"data":    res,
+						}
+						res_str, err := json.Marshal(res_json)
+						if err != nil {
+							fmt.Println(err)
+						}
+						err = websocket.Message.Send(ws, string(res_str))
+						if err != nil {
+							fmt.Println(err)
+						}
 
-			if err != nil {
-			} else {
-				//var message model.Message
-				command_data := json_map["command"]
-				command, _ := command_data.(string)
-				message_data := json_map["message"]
-				message, _ := message_data.(string)
-				user_id_data := json_map["user_id"]
-				user_id, _ := user_id_data.(uint)
+					}
+				}
+			}()
+			for {
+				// Read
+				msg := ""
+				err = websocket.Message.Receive(ws, &msg)
+				if err != nil {
+					c.Logger().Error(err)
+					break
+				}
+				fmt.Printf("%s\n", msg)
+				json_map := make(map[string]interface{})
+				err = json.Unmarshal([]byte(msg), &json_map)
 
-				fmt.Println(command)
-				fmt.Println(message)
-				fmt.Println(user_id_data)
-				fmt.Println(user_id)
+				if err != nil {
+				} else {
+					//var message model.Message
+					command_data := json_map["command"]
+					command, _ := command_data.(string)
+					message_data := json_map["message"]
+					message, _ := message_data.(string)
+					user_id_data := json_map["user_id"]
+					user_id, _ := user_id_data.(uint)
 
-				// if command == "1" {
-				// 	db.Create(&model.Message{Message: message, UserID: user_id, RoomID: 1})
-				// }
+					fmt.Println(command)
+					fmt.Println(message)
+					fmt.Println(user_id_data)
+					fmt.Println(user_id)
+
+					switch command {
+					case "get_room_message":
+					default:
+					}
+
+					// if command == "1" {
+					// 	db.Create(&model.Message{Message: message, UserID: user_id, RoomID: 1})
+					// }
+				}
 			}
 		}
 	}).ServeHTTP(c.Response(), c.Request())
@@ -70,7 +179,27 @@ func Login(c echo.Context) error {
 		name := json_map["username"]
 		password := json_map["password"]
 		var user model.User
-		err := db.Preload("Messages").Preload("Rooms").Where("name = ?", name).First(&user).Select("Users.Name, Rooms.Name").Error
+		err := db.Where("name = ?", name).First(&user).Select("Users.Name, Rooms.Name").Error
+		if err != nil {
+			panic(err)
+		}
+		//ルームIDもtokenに含む。
+		type UserRooms struct {
+			RoomID uint
+			UserID uint
+		}
+		var user_rooms []UserRooms
+
+		err = db.Debug().Table("user_rooms").Where("user_id = ?", user.ID).Find(&user_rooms).Error
+		if err != nil {
+			panic(err)
+		}
+		//RoomIDから、Roomを取得
+		var room_ids []uint
+		for i := range user_rooms {
+			room_ids = append(room_ids, user_rooms[i].RoomID)
+		}
+
 		if err != nil {
 			return c.JSON(http.StatusNotFound, nil)
 		} else {
@@ -83,14 +212,17 @@ func Login(c echo.Context) error {
 
 				}
 				claims := &model.JwtCustomClaims{
-					user.ID,
-					user.Name,
-					jwtv3.StandardClaims{
+					ID:      user.ID,
+					Name:    user.Name,
+					RoomIDs: room_ids,
+					StandardClaims: jwtv3.StandardClaims{
 						ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
 					},
 				}
+				cfg, err := config.Load()
+
 				token := jwtv3.NewWithClaims(jwt.SigningMethodHS256, claims)
-				t, err := token.SignedString([]byte("toshiki.nagahama.satomi.0819"))
+				t, err := token.SignedString([]byte(cfg.SercretKey))
 				if err != nil {
 					return err
 				}
@@ -138,14 +270,14 @@ func GetAuthenticatedUser(c echo.Context) error {
 
 	var auth_user model.User
 	err := db.First(&auth_user, id).Error
-	fmt.Println(auth_user)
+	// fmt.Println(auth_user)
 	if err != nil {
 		return c.JSON(http.StatusOK, echo.Map{
-			"result": "-1",
+			"result": -1,
 		})
 	}
 	return c.JSON(http.StatusOK, echo.Map{
-		"result": "1",
+		"result": 0,
 		"id":     id,
 		"icon":   auth_user.Icon,
 		"name":   name,
@@ -169,11 +301,11 @@ func GetUsers(c echo.Context) error {
 		err = db.Model(&model.User{}).Find(&users, user_ids).Error
 		if err != nil {
 			return c.JSON(http.StatusOK, echo.Map{
-				"result": "-1",
+				"result": -1,
 			})
 		}
 		return c.JSON(http.StatusOK, echo.Map{
-			"result": "1",
+			"result": 0,
 			"users":  users,
 		})
 	}
@@ -184,18 +316,38 @@ func GetRooms(c echo.Context) error {
 
 	user := c.Get("user").(*jwtv3.Token)
 	claims := user.Claims.(*model.JwtCustomClaims)
-	id := claims.ID
-	var auth_user model.User
-	err := db.Debug().Preload("Rooms").First(&auth_user, id).Error
+	// id := claims.ID
+	room_ids := claims.RoomIDs
+	var rooms []model.APIRoom
 
-	//fmt.Println(rooms)
-	fmt.Println(auth_user.Rooms)
+	err := db.Debug().Model(&model.Room{}).Find(&rooms, room_ids).Error
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": 0,
+		"rooms":  rooms,
+	})
+}
+
+func GetMessages(c echo.Context) error {
+	db := database.GetDB()
+
+	user := c.Get("user").(*jwtv3.Token)
+	claims := user.Claims.(*model.JwtCustomClaims)
+	id := claims.ID
+	var messages []model.Message
+	err := db.Debug().Model(&model.Message{}).Where("user_id = ?", id).Find(&messages).Error
+	if err != nil {
+		fmt.Println(err)
 	}
 	return c.JSON(http.StatusOK, echo.Map{
-		"result": "ok",
-		"room":   auth_user.Rooms,
+		"result":   0,
+		"messages": messages,
 	})
 }
 

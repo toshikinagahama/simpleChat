@@ -1,6 +1,7 @@
 package router
 
 import (
+	"chat/config"
 	"chat/handler"
 	"chat/model"
 
@@ -9,6 +10,10 @@ import (
 )
 
 func NewRouter() (*echo.Echo, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
 
 	router := echo.New()
 	router.Use(middleware.CORS())
@@ -21,12 +26,13 @@ func NewRouter() (*echo.Echo, error) {
 
 	config := middleware.JWTConfig{
 		Claims:     &model.JwtCustomClaims{},
-		SigningKey: []byte("toshiki.nagahama.satomi.0819"),
+		SigningKey: []byte(cfg.SercretKey),
 	}
 	router_group.Use(middleware.JWTWithConfig(config))
 	router_group.GET("/auth_user", handler.GetAuthenticatedUser)
 	router_group.POST("/get_users", handler.GetUsers)
 	router_group.GET("/get_rooms", handler.GetRooms)
+	router_group.GET("/get_messages", handler.GetMessages)
 	// router_group.GET("", handler.Restricted)
 
 	return router, nil
