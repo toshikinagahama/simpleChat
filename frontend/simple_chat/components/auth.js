@@ -11,21 +11,21 @@ const Auth = ({ children }) => {
     else {
       setComponent(children);
     }
-    const res = await fetch('http://localhost:1323/restricted/auth_user', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).catch(() => null);
-    if (res != null) {
-      const json_data = await res.json().catch(() => null);
-      console.log(json_data);
-      if (json_data['result'] != null) {
-        setComponent(children);
-      } else {
-        router.replace('/');
-      }
-    }
-  }, []);
+    // const res = await fetch('http://localhost:1323/restricted/auth_user', {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // }).catch(() => null);
+    // if (res != null) {
+    //   const json_data = await res.json().catch(() => null);
+    //   console.log(json_data);
+    //   if (json_data['result'] != null) {
+    //     setComponent(children);
+    //   } else {
+    //     router.replace('/');
+    //   }
+    // }
+  }, [children]);
 
   //何もなければ次へ（そのまま処理）
   return component;

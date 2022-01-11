@@ -16,7 +16,21 @@ export const userState = atom({
   },
 });
 
-export const socketState = atom({
-  key: 'socket',
-  default: null,
+//message
+export const messagesState = atom({
+  key: 'messages',
+  default: [
+    {
+      id: '1',
+      message: '',
+      user_id: -1,
+      room_id: -1,
+    },
+  ],
+});
+
+//isFirstFetchMessages
+export const isFirstFetchMessagesState = atom({
+  key: 'isFirstFetchMessages',
+  default: false,
 });

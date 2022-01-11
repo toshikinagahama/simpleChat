@@ -1,3 +1,15 @@
 {
-  "go.inferGopath": false
+  "go.inferGopath": false,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "postgresql_chat_db",
+      "database": "chat_db",
+      "username": "toshikinagahama",
+      "password": "toshi0819"
+    }
+  ]
 }

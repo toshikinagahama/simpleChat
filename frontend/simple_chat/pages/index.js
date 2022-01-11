@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect, useCallback } from 'react';
-import { userState, socketState } from '../components/atoms';
+import React, { useState, useEffect, useRef } from 'react';
+import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 
 export default function Home(pageProps) {
@@ -10,20 +10,6 @@ export default function Home(pageProps) {
   const [username, setUsername] = useState('toshiki');
   const [password, setPassword] = useState('toshiki');
   const [user, setUser] = useRecoilState(userState);
-  const [socket, setSocket] = useRecoilState(socketState);
-  useEffect(() => {}, []);
-
-  useEffect(() => {
-    if (socket == null) return;
-    socket.addEventListener('open', function (e) {
-      console.log('Socket 接続成功');
-    });
-
-    // サーバーからデータを受け取る
-    socket.addEventListener('message', function (e) {
-      console.log(e.data);
-    });
-  }, [socket]);
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -66,10 +52,6 @@ export default function Home(pageProps) {
           //console.log(json['exp']);
           let dateTime = new Date(json['exp'] * 1000);
           //console.log(dateTime.toString());
-          if (socket == null) {
-            setSocket(new WebSocket('ws://localhost:1323/ws'));
-            // setSocket(new WebSocket('ws://localhost:1323/ws'));
-          }
           localStorage.setItem('token', token);
           setUser(json_data);
           router.push('/user');

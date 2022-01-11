@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 export default function MyNav(props) {
   useEffect(() => {
     console.log(props);
-    if (window.innerWidth >= 672) {
+    if (window.innerWidth >= 1024) {
       setIsShowMenuContent(true);
     } else {
       setIsShowMenuContent(false);
     }
   }, []);
 
-  const [isShowMenuContent, setIsShowMenuContent] = useState(true);
+  const [isShowMenuContent, setIsShowMenuContent] = useState(false);
 
   return (
     <nav className="sticky top-0 flex items-center justify-between w-full max-w-screen-lg flex-wrap bg-slate-400 p-4">

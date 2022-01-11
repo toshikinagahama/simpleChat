@@ -1,98 +1,187 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
-import { userState, socketState } from '../components/atoms';
+import React, { useState, useEffect, useRef } from 'react';
+import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Image from 'next/image';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
+import { human_icon } from '../global';
 
 export default function User(pageProps) {
   const router = useRouter();
   const [user, setUser] = useRecoilState(userState);
-  const [socket, setSocket] = useRecoilState(socketState);
-  const [message, setMessage] = useState('');
-  const [isShowMenuContent, setIsShowMenuContent] = useState(true);
-  const [rooms, setRooms] = useState([
-    {
-      id: 'test1',
-      name: 'test1',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      num_unread: 3,
-      last_update: new Date(),
-      last_message: 'やあ！',
-    },
-    {
-      id: 'test2',
-      name: 'test2',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      num_unread: 0,
-      last_update: new Date(),
-      last_message: 'やあ！',
-    },
-    {
-      id: 'test3',
-      name: 'test3',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      num_unread: 1,
-      last_update: new Date(),
-      last_message: 'やあ！',
-    },
-    {
-      id: 'test4',
-      name: 'test4',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      num_unread: 3,
-      last_update: new Date(),
-      last_message: 'やあ！',
-    },
-  ]);
-  useEffect(async () => {
-    if (window.innerWidth >= 672) {
-      setIsShowMenuContent(true);
-    } else {
-      setIsShowMenuContent(false);
-    }
-    const token = localStorage.getItem('token');
+  const [messages, setMessages] = useRecoilState(messagesState);
+  const socketRef = useRef();
+  const refMessages = useRef([]);
 
-    const res = await fetch('http://localhost:1323/restricted/get_users', {
-      method: 'POST',
+  const [isFetchData, setIsFetchData] = useState(false);
+  const [rooms, setRooms] = useState([]);
+
+  useEffect(async () => {
+    const token = localStorage.getItem('token');
+    socketRef.current = new WebSocket('ws://localhost:1323/ws');
+    // if (socket == null) return;
+    socketRef.current.addEventListener('open', function (e) {
+      socketRef.current.send(token);
+    });
+
+    const res = await fetch('http://localhost:1323/restricted/get_messages', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        user_ids: [1, 3],
-      }),
     }).catch(() => null);
     if (res != null) {
       const json_data = await res.json().catch(() => null);
       console.log(json_data);
-      // if (json_data['result'] != null) {
-      //   setComponent(children);
-      // } else {
-      //   router.replace('/');
-      // }
+      if (json_data['result'] != null) {
+        if (json_data['result'] === 0) {
+          setMessages([]);
+          setMessages(json_data['messages']);
+        }
+      }
     }
 
-    const res2 = await fetch('http://localhost:1323/restricted/get_rooms', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }).catch(() => null);
-    if (res2 != null) {
-      console.log(res2);
-      const json_data = await res.json().catch(() => null);
-      console.log(json_data);
-      // if (json_data['result'] != null) {
-      //   setComponent(children);
-      // } else {
-      //   router.replace('/');
-      // }
-    }
+    // サーバーからデータを受け取る
+    socketRef.current.addEventListener('message', function (e) {
+      try {
+        console.log(e.data);
+        const json_data = JSON.parse(e.data);
+        const command = json_data['command'];
+        console.log(json_data);
+        if (command != null) {
+          switch (command) {
+            case 1:
+              console.log(json_data['data']);
+              setMessages([...refMessages.current, json_data['data']]);
+              console.log(refMessages.current);
+              break;
+            default:
+              break;
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+    return () => {
+      console.log('Disconnecting..');
+      socketRef.current.close();
+      // removeListeners?.();
+    };
   }, []);
+
+  useEffect(() => {
+    refMessages.current = [...messages];
+    let m = messages.slice(-1)[0];
+    let rooms_new = [...rooms]; //更新用rooms
+    console.log(m.CreatedAt);
+    for (let i = 0; i < rooms_new.length; i++) {
+      if (rooms_new[i].id == m.room_id) {
+        rooms_new[i].num_unread++;
+        rooms_new[i].last_message = m.message;
+        rooms_new[i].last_update = new Date(m.CreatedAt);
+      }
+    }
+    setRooms(rooms_new);
+  }, [messages]);
+  useEffect(() => {
+    // const res = await fetch('http://localhost:1323/restricted/get_users', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    //   body: JSON.stringify({
+    //     user_ids: [1, 3],
+    //   }),
+    // }).catch(() => null);
+    // if (res != null) {
+    //   const json_data = await res.json().catch(() => null);
+    //   console.log(json_data);
+    //   // if (json_data['result'] != null) {
+    //   //   setComponent(children);
+    //   // } else {
+    //   //   router.replace('/');
+    //   // }
+    // }
+    const fetchData = async () => {
+      if (!isFetchData) {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:1323/restricted/get_rooms', {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }).catch(() => null);
+        if (res != null) {
+          // console.log(res);
+          const json_data = await res.json().catch(() => null);
+          // console.log(json_data);
+          if (json_data['result'] != null) {
+            if (json_data['result'] === 0) {
+              const res_rooms = json_data['rooms'];
+              console.log(res_rooms);
+              setIsFetchData(true);
+              const rooms_new = [];
+              res_rooms.map((r, index) => {
+                if (r.icon == '') {
+                  r.icon = human_icon;
+                }
+                rooms_new.push({
+                  id: r.id,
+                  name: r.name,
+                  icon: r.icon,
+                  num_unread: 0,
+                  last_update: new Date(),
+                  last_message: '',
+                });
+              });
+              setRooms([...rooms, ...rooms_new]);
+            }
+          }
+        }
+      }
+    };
+    fetchData();
+    console.log(rooms);
+  }, [rooms]);
+  // useEffect(async () => {
+  //   const token = localStorage.getItem('token');
+  //   const res = await fetch('http://localhost:1323/restricted/get_rooms', {
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   }).catch(() => null);
+  //   if (res != null) {
+  //     console.log(res);
+  //     const json_data = await res.json().catch(() => null);
+  //     console.log(json_data);
+  //     if (json_data['result'] != null) {
+  //       if (json_data['result'] === 0) {
+  //         const res_rooms = json_data['rooms'];
+  //         console.log(res_rooms);
+  //         res_rooms.map((r, index) => {
+  //           setRooms([
+  //             ...rooms,
+  //             {
+  //               id: r.id,
+  //               name: r.name,
+  //               icon: r.icon,
+  //               num_unread: 0,
+  //               last_update: new Date(),
+  //               last_message: '',
+  //             },
+  //           ]);
+  //         });
+  //         console.log(rooms);
+  //       }
+  //     }
+  //   }
+  // }, [rooms]);
 
   return (
     <Auth>
@@ -101,17 +190,18 @@ export default function User(pageProps) {
           <title>部屋一覧</title>
         </Head>
         <MyNav title="あなたの部屋" />
-
         <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100">
-          {rooms.map((room) => {
+          {rooms.map((room, index) => {
             return (
-              <Link href={'/room/' + room.id} key={room.id}>
+              <Link href={'/room/' + room.id} key={index}>
                 <a className="w-full">
                   <div className="w-full border-b-2 border-zinc-300 py-4 flex">
                     <div className="">
-                      <div className="w-16 h-16 shadow-lg rounded-full p-2 mx-2">
-                        <img src={room.icon} alt={''} width={80} height={80} />
-                      </div>
+                      <img
+                        className="w-16 h-16 shadow-lg rounded-full mx-2 object-contain"
+                        src={room.icon}
+                        alt={''}
+                      />
                     </div>
                     <div className="flex-grow text-left px-4 py-2 flex flex-col justify-center">
                       <p className="text-sm mb-1">{room.name}</p>
