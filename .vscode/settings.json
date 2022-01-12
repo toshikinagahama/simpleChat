@@ -6,10 +6,10 @@
       "server": "localhost",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "postgresql_chat_db",
+      "name": "postgres_chat_db",
       "database": "chat_db",
-      "username": "toshikinagahama",
-      "password": "toshi0819"
+      "username": "postgres",
+      "password": "postgres"
     }
   ]
 }

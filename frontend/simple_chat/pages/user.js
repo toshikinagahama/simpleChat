@@ -75,17 +75,19 @@ export default function User(pageProps) {
 
   useEffect(() => {
     refMessages.current = [...messages];
-    let m = messages.slice(-1)[0];
-    let rooms_new = [...rooms]; //更新用rooms
-    console.log(m.CreatedAt);
-    for (let i = 0; i < rooms_new.length; i++) {
-      if (rooms_new[i].id == m.room_id) {
-        rooms_new[i].num_unread++;
-        rooms_new[i].last_message = m.message;
-        rooms_new[i].last_update = new Date(m.CreatedAt);
+    if (messages.length > 0) {
+      let m = messages.slice(-1)[0];
+      let rooms_new = [...rooms]; //更新用rooms
+      console.log(m.CreatedAt);
+      for (let i = 0; i < rooms_new.length; i++) {
+        if (rooms_new[i].id == m.room_id) {
+          rooms_new[i].num_unread++;
+          rooms_new[i].last_message = m.message;
+          rooms_new[i].last_update = new Date(m.CreatedAt);
+        }
       }
+      setRooms(rooms_new);
     }
-    setRooms(rooms_new);
   }, [messages]);
   useEffect(() => {
     // const res = await fetch('http://localhost:1323/restricted/get_users', {

@@ -7,8 +7,8 @@ import { useRecoilState } from 'recoil';
 
 export default function Home(pageProps) {
   const router = useRouter();
-  const [username, setUsername] = useState('toshiki');
-  const [password, setPassword] = useState('toshiki');
+  const [username, setUsername] = useState('test_user1');
+  const [password, setPassword] = useState('test_user1');
   const [user, setUser] = useRecoilState(userState);
 
   const handleUsernameChange = (e) => {

@@ -1,6 +1,7 @@
 package PGNotifyBuilder
 
 import (
+	"chat/config"
 	"fmt"
 	"log"
 
@@ -63,8 +64,9 @@ func throwNotificationSQL(eventName string, table string, sqlMethod string, payl
 }
 
 func Serve(r *Receive) {
+	cfg, err := config.Load()
 	db, err := gorm.Open(postgres.New(postgres.Config{
-		DSN:                  "user=toshikinagahama password=toshi0819 dbname=chat_db port=5432 sslmode=disable TimeZone=Asia/Tokyo",
+		DSN:                  cfg.DBConnect,
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 	db_v2, _ := db.DB()

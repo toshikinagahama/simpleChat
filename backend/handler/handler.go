@@ -181,7 +181,7 @@ func Login(c echo.Context) error {
 		var user model.User
 		err := db.Where("name = ?", name).First(&user).Select("Users.Name, Rooms.Name").Error
 		if err != nil {
-			panic(err)
+			return c.JSON(http.StatusUnauthorized, nil)
 		}
 		//ルームIDもtokenに含む。
 		type UserRooms struct {
@@ -191,9 +191,6 @@ func Login(c echo.Context) error {
 		var user_rooms []UserRooms
 
 		err = db.Debug().Table("user_rooms").Where("user_id = ?", user.ID).Find(&user_rooms).Error
-		if err != nil {
-			panic(err)
-		}
 		//RoomIDから、Roomを取得
 		var room_ids []uint
 		for i := range user_rooms {
@@ -201,7 +198,7 @@ func Login(c echo.Context) error {
 		}
 
 		if err != nil {
-			return c.JSON(http.StatusNotFound, nil)
+			return c.JSON(http.StatusUnauthorized, nil)
 		} else {
 			if user.Password == password {
 				user.Password = ""
@@ -231,9 +228,8 @@ func Login(c echo.Context) error {
 					"token": t,
 				})
 
-				// return c.JSON(http.StatusOK, user)
 			} else {
-				return c.JSON(http.StatusNotFound, nil)
+				return c.JSON(http.StatusUnauthorized, nil)
 			}
 		}
 	}
@@ -319,13 +315,20 @@ func GetRooms(c echo.Context) error {
 	// id := claims.ID
 	room_ids := claims.RoomIDs
 	var rooms []model.APIRoom
+	fmt.Println("------")
+	fmt.Println(room_ids)
+	fmt.Println("------")
 
-	err := db.Debug().Model(&model.Room{}).Find(&rooms, room_ids).Error
-	if err != nil {
-		fmt.Println(err)
-		return c.JSON(http.StatusOK, echo.Map{
-			"result": -1,
-		})
+	if len(room_ids) > 0 {
+		err := db.Debug().Model(&model.Room{}).Find(&rooms, room_ids).Error
+		if err != nil {
+			fmt.Println(err)
+			return c.JSON(http.StatusOK, echo.Map{
+				"result": -1,
+			})
+		}
+	} else {
+		rooms = []model.APIRoom{}
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
