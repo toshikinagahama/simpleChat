@@ -14,7 +14,7 @@ export default function MyNav(props) {
   const [isShowMenuContent, setIsShowMenuContent] = useState(false);
 
   return (
-    <nav className="sticky top-0 flex items-center justify-between w-full max-w-screen-lg flex-wrap bg-slate-400 p-4">
+    <nav className="sticky top-0 flex items-center justify-between w-full flex-wrap bg-slate-400 p-4">
       <div className="flex items-center flex-no-shrink text-white mr-6">
         <span className="font-semibold text-xl tracking-tight">{props.title}</span>
       </div>

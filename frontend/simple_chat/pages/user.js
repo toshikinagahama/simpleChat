@@ -187,7 +187,7 @@ export default function User(pageProps) {
 
   return (
     <Auth>
-      <div className="flex flex-col items-center justify-center min-h-screen w-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen w-full">
         <Head>
           <title>部屋一覧</title>
         </Head>

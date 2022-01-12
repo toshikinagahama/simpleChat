@@ -52,9 +52,9 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 }
 
 func Websocket(c echo.Context) error {
-	// db := database.GetDB()
 
 	websocket.Handler(func(ws *websocket.Conn) {
+		fmt.Println("websocket handler")
 		defer ws.Close()
 		// Write
 		err := websocket.Message.Send(ws, "Hello, Client!")
