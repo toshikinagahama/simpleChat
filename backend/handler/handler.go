@@ -6,15 +6,28 @@ import (
 	"chat/model"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	jwtv3 "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
-	"github.com/lib/pq"
-	"golang.org/x/net/websocket"
 )
+
+// 接続されるクライアント
+var clients = make(map[*websocket.Conn]bool)
+
+//アップグレーダー
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+// メッセージブロードキャストチャネル
+var broadcast = make(chan string)
 
 // Parse は jwt トークンから元になった認証情報を取り出す。
 func getAuthenticate(tokenstring string) (*model.Auth, error) {
@@ -52,120 +65,158 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 }
 
 func Websocket(c echo.Context) error {
+	fmt.Println("websocket handler")
 
-	websocket.Handler(func(ws *websocket.Conn) {
-		fmt.Println("websocket handler")
-		defer ws.Close()
-		// Write
-		err := websocket.Message.Send(ws, "Hello, Client!")
+	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ws.Close()
+	// Write
+	if err != nil {
+		c.Logger().Error(err)
+	}
+	fmt.Println("---")
+	//最初に認証の処理を行う
+	fmt.Println("websocket authenticate start")
+	_, token, err := ws.ReadMessage()
+	if err != nil {
+		panic(err)
+	}
+	auth, err2 := getAuthenticate(string(token))
+	fmt.Println("websocket authenticate end")
+	if auth != nil {
+		return nil
+	}
+	if err2 != nil {
+		return nil
+	}
+	fmt.Println(auth.UserID)
+	// クライアントを登録
+	clients[ws] = true
+	err = ws.WriteMessage(websocket.TextMessage, []byte("Hello Client"))
+	if err != nil {
+		return nil
+	}
+
+	for {
+		_, msg, err := ws.ReadMessage()
 		if err != nil {
-			c.Logger().Error(err)
+			log.Printf("error: %v", err)
+			delete(clients, ws)
+			break
 		}
-		//最初に認証の処理を行う
-		fmt.Println("websocket authenticate start")
-		token := ""
-		err = websocket.Message.Receive(ws, &token)
-		if err != nil {
-			panic(err)
-		}
-		auth, err2 := getAuthenticate(token)
-		fmt.Println("websocket authenticate end")
-		if err2 != nil {
-			panic(err2)
-		}
-		fmt.Println(auth.UserID)
-		if auth != nil {
-			reportProblem := func(ev pq.ListenerEventType, err error) {
-				if err != nil {
-					fmt.Println(err.Error())
-				}
-			}
-			cfg, err := config.Load()
-			listener := pq.NewListener(cfg.DBConnect, 10*time.Second, time.Minute, reportProblem)
-			err = listener.Listen("messages")
-			if err != nil {
-				panic(err)
-			}
+		// 受け取ったメッセージをbroadcastチャネルに送る
+		broadcast <- string(msg)
+	}
+	// if auth != nil {
+	// 	reportProblem := func(ev pq.ListenerEventType, err error) {
+	// 		if err != nil {
+	// 			fmt.Println(err.Error())
+	// 		}
+	// 	}
+	// 	cfg, err := config.Load()
+	// 	listener := pq.NewListener(cfg.DBConnect, 10*time.Second, time.Minute, reportProblem)
+	// 	err = listener.Listen("messages")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
 
-			go func() {
-				for {
-					select {
-					case n := <-listener.Notify:
-						type Result struct {
-							ID        uint      `json:"ID"`
-							CreatedAt time.Time `json:"CreatedAt"`
-							UpdatedAt time.Time `json:"UpdatedAt"`
-							DeletedAt time.Time `json:"DeletedAt"`
-							UserID    uint      `json:"user_id"`
-							RoomID    uint      `json:"room_id"`
-							ReadCount uint      `json:"read_count"`
-							Message   string    `json:"message"`
-						}
-						var res Result
-						fmt.Println(n.Extra)
-						err = json.Unmarshal([]byte(n.Extra), &res)
-						if auth.UserID != res.UserID {
-							continue
-						}
-						if err != nil {
-							fmt.Println(err)
-						}
-						res_json := echo.Map{
-							"command": 1,
-							"data":    res,
-						}
-						res_str, err := json.Marshal(res_json)
-						if err != nil {
-							fmt.Println(err)
-						}
-						err = websocket.Message.Send(ws, string(res_str))
-						if err != nil {
-							fmt.Println(err)
-						}
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case n := <-listener.Notify:
+	// 			type Result struct {
+	// 				ID        uint      `json:"ID"`
+	// 				CreatedAt time.Time `json:"CreatedAt"`
+	// 				UpdatedAt time.Time `json:"UpdatedAt"`
+	// 				DeletedAt time.Time `json:"DeletedAt"`
+	// 				UserID    uint      `json:"user_id"`
+	// 				RoomID    uint      `json:"room_id"`
+	// 				ReadCount uint      `json:"read_count"`
+	// 				Message   string    `json:"message"`
+	// 			}
+	// 			var res Result
+	// 			fmt.Println(n.Extra)
+	// 			err = json.Unmarshal([]byte(n.Extra), &res)
+	// 			if auth.UserID != res.UserID {
+	// 				continue
+	// 			}
+	// 			if err != nil {
+	// 				fmt.Println(err)
+	// 			}
+	// 			res_json := echo.Map{
+	// 				"command": 1,
+	// 				"data":    res,
+	// 			}
+	// 			res_str, err := json.Marshal(res_json)
+	// 			if err != nil {
+	// 				fmt.Println(err)
+	// 			}
+	// 			err = websocket.Message.Send(ws, string(res_str))
+	// 			if err != nil {
+	// 				fmt.Println(err)
+	// 			}
 
-					}
-				}
-			}()
-			for {
-				// Read
-				msg := ""
-				err = websocket.Message.Receive(ws, &msg)
-				if err != nil {
-					c.Logger().Error(err)
-					break
-				}
-				fmt.Printf("%s\n", msg)
-				json_map := make(map[string]interface{})
-				err = json.Unmarshal([]byte(msg), &json_map)
+	// 		}
+	// 	}
+	// }()
+	// for {
+	// 	// Read
+	// 	msg := ""
+	// 	err = websocket.Message.Receive(ws, &msg)
+	// 	if err != nil {
+	// 		c.Logger().Error(err)
+	// 		break
+	// 	}
+	// 	fmt.Printf("%s\n", msg)
+	// 	json_map := make(map[string]interface{})
+	// 	err = json.Unmarshal([]byte(msg), &json_map)
 
-				if err != nil {
-				} else {
-					//var message model.Message
-					command_data := json_map["command"]
-					command, _ := command_data.(string)
-					message_data := json_map["message"]
-					message, _ := message_data.(string)
-					user_id_data := json_map["user_id"]
-					user_id, _ := user_id_data.(uint)
+	// 	if err != nil {
+	// 	} else {
+	// 		//var message model.Message
+	// 		command_data := json_map["command"]
+	// 		command, _ := command_data.(string)
+	// 		message_data := json_map["message"]
+	// 		message, _ := message_data.(string)
+	// 		user_id_data := json_map["user_id"]
+	// 		user_id, _ := user_id_data.(uint)
 
-					fmt.Println(command)
-					fmt.Println(message)
-					fmt.Println(user_id_data)
-					fmt.Println(user_id)
+	// 		fmt.Println(command)
+	// 		fmt.Println(message)
+	// 		fmt.Println(user_id_data)
+	// 		fmt.Println(user_id)
 
-					switch command {
-					case "get_room_message":
-					default:
-					}
+	// 		switch command {
+	// 		case "get_room_message":
+	// 		default:
+	// 		}
 
-					// if command == "1" {
-					// 	db.Create(&model.Message{Message: message, UserID: user_id, RoomID: 1})
-					// }
-				}
-			}
-		}
-	}).ServeHTTP(c.Response(), c.Request())
+	// 		// if command == "1" {
+	// 		// 	db.Create(&model.Message{Message: message, UserID: user_id, RoomID: 1})
+	// 		// }
+	// 	}
+	// }
+	// }
 	return nil
+}
+
+func WebsocketMessages() {
+	for {
+		// broadcastチャネルからメッセージを受け取る
+		msg := <-broadcast
+		// 接続中の全クライアントにメッセージを送る
+		for client := range clients {
+			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				fmt.Println("---!!!!!!!!!!!")
+				log.Printf("error: %v", err)
+				client.Close()
+				delete(clients, client)
+			}
+		}
+	}
 }
 
 func Login(c echo.Context) error {

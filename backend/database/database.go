@@ -64,6 +64,82 @@ func Init() {
 			db.Create(&room)
 		}
 	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user1").First(&user).Error
+		if err != nil {
+			panic(err)
+		}
+		var room model.Room
+		err = db.Where("name = ?", "test_room1").First(&room).Error
+		if err != nil {
+			panic(err)
+		}
+		var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+		db.Create(&user_room)
+	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user1").First(&user).Error
+		if err != nil {
+			panic(err)
+		}
+		var room model.Room
+		err = db.Where("name = ?", "test_room2").First(&room).Error
+		if err != nil {
+			panic(err)
+		}
+		var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+		db.Create(&user_room)
+	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user2").First(&user).Error
+		if err == nil {
+			var room model.Room
+			err = db.Where("name = ?", "test_room1").First(&room).Error
+			if err == nil {
+				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+				db.Create(&user_room)
+			}
+		}
+	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user2").First(&user).Error
+		if err == nil {
+			var room model.Room
+			err = db.Where("name = ?", "test_room1").First(&room).Error
+			if err == nil {
+				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+				db.Create(&user_room)
+			}
+		}
+	}
+	// {
+	// 	var user model.User
+	// 	err = db.Where("name = ?", "test_user1").First(&user).Error
+	// 	if err == nil {
+	// 		var room model.Room
+	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
+	// 		if err == nil {
+	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Message: "hello from test_user1", ReadCount: 0}
+	// 			db.Create(&message)
+	// 		}
+	// 	}
+	// }
+	// {
+	// 	var user model.User
+	// 	err = db.Where("name = ?", "test_user2").First(&user).Error
+	// 	if err == nil {
+	// 		var room model.Room
+	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
+	// 		if err == nil {
+	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Message: "hello from test_user2", ReadCount: 0}
+	// 			db.Create(&message)
+	// 		}
+	// 	}
+	// }
 
 }
 

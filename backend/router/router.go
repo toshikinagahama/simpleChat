@@ -21,6 +21,7 @@ func NewRouter() (*echo.Echo, error) {
 	router.Use(middleware.Recover())
 	router.Static("/", "../frontend")
 	router.GET("/ws", handler.Websocket)
+	go handler.WebsocketMessages()
 	router.POST("/login", handler.Login)
 	router_group := router.Group("/restricted")
 

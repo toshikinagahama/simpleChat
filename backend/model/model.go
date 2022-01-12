@@ -39,6 +39,11 @@ type Room struct {
 	Messages []Message
 }
 
+type UserRoom struct {
+	UserID uint `json:"user_id"`
+	RoomID uint `json:"room_id"`
+}
+
 type APIRoom struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
