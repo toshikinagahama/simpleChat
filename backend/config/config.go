@@ -8,7 +8,9 @@ import (
 
 // マッピング用の構造体
 type Config struct {
-	Version string `yaml:"version"`
+	Version    string `yaml:"version"`
+	DBConnect  string `yaml:"dbconnect"`
+	SercretKey string `yaml:"sercretkey"`
 }
 
 func Load() (*Config, error) {

@@ -1,36 +1,15 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect, useCallback } from 'react';
-import { userState, socketState } from '../components/atoms';
+import React, { useState, useEffect, useRef } from 'react';
+import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 
 export default function Home(pageProps) {
   const router = useRouter();
-  const [username, setUsername] = useState('toshiki');
-  const [password, setPassword] = useState('toshiki');
+  const [username, setUsername] = useState('test_user1');
+  const [password, setPassword] = useState('test_user1');
   const [user, setUser] = useRecoilState(userState);
-  const [socket, setSocket] = useRecoilState(socketState);
-  useEffect(() => {
-    setSocket(new WebSocket('ws://192.168.10.17:1323/ws'));
-    // setSocket(new WebSocket('ws://localhost:1323/ws'));
-    // 接続
-    // setTimeout(() => {
-    //   }, 5000);
-  }, []);
-
-  useEffect(() => {
-    console.log(socket);
-    if (socket == null) return;
-    socket.addEventListener('open', function (e) {
-      console.log('Socket 接続成功');
-    });
-
-    // サーバーからデータを受け取る
-    socket.addEventListener('message', function (e) {
-      console.log(e.data);
-    });
-  }, [socket]);
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -43,7 +22,7 @@ export default function Home(pageProps) {
   };
 
   const handleLoginBtnClick = async (e) => {
-    const res = await fetch('http://192.168.10.17:1323/get_user', {
+    const res = await fetch('http://localhost:1323/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,10 +34,29 @@ export default function Home(pageProps) {
     }).catch(() => null);
     if (res != null) {
       const json_data = await res.json().catch(() => null);
-      console.log(json_data);
+      //console.log(json_data);
       if (json_data != null) {
-        setUser(json_data);
-        router.push('/user');
+        const token = json_data['token'];
+        if (token != null) {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join('')
+          );
+          const json = JSON.parse(jsonPayload);
+          //console.log(json['exp']);
+          let dateTime = new Date(json['exp'] * 1000);
+          //console.log(dateTime.toString());
+          localStorage.setItem('token', token);
+          setUser(json_data);
+          router.push('/user');
+        } else {
+        }
       }
     } else {
       alert('failed to connect server');
