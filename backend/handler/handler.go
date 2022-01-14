@@ -17,7 +17,7 @@ import (
 )
 
 // 接続されるクライアント
-var clients = make(map[*websocket.Conn]bool)
+var clients = make(map[*websocket.Conn]*model.Auth)
 
 //アップグレーダー
 var upgrader = websocket.Upgrader{
@@ -27,11 +27,14 @@ var upgrader = websocket.Upgrader{
 }
 
 // メッセージブロードキャストチャネル
-var broadcast = make(chan string)
+var broadcast = make(chan model.APIMessage)
 
 // Parse は jwt トークンから元になった認証情報を取り出す。
 func getAuthenticate(tokenstring string) (*model.Auth, error) {
 	cfg, err := config.Load()
+	if err != nil {
+		return nil, fmt.Errorf("config is not valid")
+	}
 
 	token, err := jwt.Parse(tokenstring, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.SercretKey), nil
@@ -50,17 +53,28 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 	}
 
 	if token == nil {
-		return nil, fmt.Errorf("not found token in %s:", tokenstring)
+		return nil, fmt.Errorf("not found token in %s ", tokenstring)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	userID, ok := claims["id"].(float64)
 	if !ok {
-		return nil, fmt.Errorf("not found id in %s:", tokenstring)
+		return nil, fmt.Errorf("not found claims in %s ", tokenstring)
+	}
+
+	user_id, ok := claims["id"].(float64)
+	if !ok {
+		return nil, fmt.Errorf("not found user_id in %s ", tokenstring)
+	}
+
+	room_ids := []uint{}
+	room_ids_interface := claims["room_ids"].([]interface{})
+	for _, r := range room_ids_interface {
+		room_ids = append(room_ids, uint(r.(float64)))
 	}
 
 	return &model.Auth{
-		UserID: (uint)(userID),
+		UserID:  (uint)(user_id),
+		RoomIDs: room_ids,
 	}, nil
 }
 
@@ -79,35 +93,60 @@ func Websocket(c echo.Context) error {
 	fmt.Println("---")
 	//最初に認証の処理を行う
 	fmt.Println("websocket authenticate start")
-	_, token, err := ws.ReadMessage()
+	// _, token, err := ws.ReadMessage()
+	type Data struct {
+		Token string `json:"token"`
+	}
+	type Res struct {
+		Command uint `json:"command"`
+		Data    Data `json:"data"`
+	}
+	var res Res
+	err = ws.ReadJSON(&res)
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
-	auth, err2 := getAuthenticate(string(token))
-	fmt.Println("websocket authenticate end")
-	if auth != nil {
-		return nil
-	}
+	auth, err2 := getAuthenticate(string(res.Data.Token))
 	if err2 != nil {
-		return nil
+		fmt.Println(err)
+		panic(err2)
 	}
-	fmt.Println(auth.UserID)
+	fmt.Printf("ID: %d\n", auth.UserID)
+	fmt.Println("websocket authenticate end")
 	// クライアントを登録
-	clients[ws] = true
-	err = ws.WriteMessage(websocket.TextMessage, []byte("Hello Client"))
+	clients[ws] = auth
+	err = ws.WriteJSON(echo.Map{"command": 0, "result": 0})
+	// err = ws.WriteMessage(websocket.TextMessage, []byte("Hello Client"))
 	if err != nil {
+		fmt.Println(err)
 		return nil
 	}
 
+	db := database.GetDB()
+
 	for {
-		_, msg, err := ws.ReadMessage()
+		type Res struct {
+			Command uint             `json:"command"`
+			APIMsg  model.APIMessage `json:"message"`
+		}
+		var res Res
+		err := ws.ReadJSON(&res)
+		fmt.Println(res)
 		if err != nil {
 			log.Printf("error: %v", err)
 			delete(clients, ws)
 			break
 		}
-		// 受け取ったメッセージをbroadcastチャネルに送る
-		broadcast <- string(msg)
+		//データベースに追加
+		message := model.Message{
+			Message:   res.APIMsg.Message,
+			ReadCount: 0,
+			UserID:    res.APIMsg.UserID,
+			RoomID:    res.APIMsg.RoomID}
+
+		db.Create(&message)
+		broadcast <- res.APIMsg
 	}
 	// if auth != nil {
 	// 	reportProblem := func(ev pq.ListenerEventType, err error) {
@@ -202,15 +241,29 @@ func Websocket(c echo.Context) error {
 	return nil
 }
 
+func Contains(s []uint, e uint) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func WebsocketMessages() {
 	for {
-		// broadcastチャネルからメッセージを受け取る
 		msg := <-broadcast
-		// 接続中の全クライアントにメッセージを送る
-		for client := range clients {
-			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
+		fmt.Println(msg)
+
+		for client, auth := range clients {
+			isContain := Contains(auth.RoomIDs, msg.RoomID)
+			fmt.Println(auth.RoomIDs)
+			fmt.Printf("RoomID: %d\n", msg.RoomID)
+			if !isContain {
+				continue
+			}
+			err := client.WriteMessage(websocket.TextMessage, []byte(msg.Message))
 			if err != nil {
-				fmt.Println("---!!!!!!!!!!!")
 				log.Printf("error: %v", err)
 				client.Close()
 				delete(clients, client)
@@ -241,7 +294,7 @@ func Login(c echo.Context) error {
 		}
 		var user_rooms []UserRooms
 
-		err = db.Debug().Table("user_rooms").Where("user_id = ?", user.ID).Find(&user_rooms).Error
+		err = db.Table("user_rooms").Where("user_id = ?", user.ID).Find(&user_rooms).Error
 		//RoomIDから、Roomを取得
 		var room_ids []uint
 		for i := range user_rooms {
@@ -314,6 +367,7 @@ func GetAuthenticatedUser(c echo.Context) error {
 	claims := user.Claims.(*model.JwtCustomClaims)
 	id := claims.ID
 	name := claims.Name
+	room_ids := claims.RoomIDs
 
 	var auth_user model.User
 	err := db.First(&auth_user, id).Error
@@ -325,9 +379,12 @@ func GetAuthenticatedUser(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"result": 0,
-		"id":     id,
-		"icon":   auth_user.Icon,
-		"name":   name,
+		"user": echo.Map{
+			"id":       id,
+			"icon":     auth_user.Icon,
+			"room_ids": room_ids,
+			"name":     name,
+		},
 	})
 }
 
@@ -338,44 +395,95 @@ func GetUsers(c echo.Context) error {
 	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
 	if err != nil {
 		return c.JSON(http.StatusOK, echo.Map{
-			"result": err,
+			"result": -1,
 		})
 
-	} else {
-		fmt.Println(json_map["user_ids"])
-		user_ids := json_map["user_ids"]
-		var users []model.APIUser
-		err = db.Model(&model.User{}).Find(&users, user_ids).Error
-		if err != nil {
-			return c.JSON(http.StatusOK, echo.Map{
-				"result": -1,
-			})
-		}
+	}
+	fmt.Println(json_map["user_ids"])
+	user_ids := json_map["user_ids"]
+	var users []model.APIUser
+	err = db.Model(&model.User{}).Find(&users, user_ids).Error
+	if err != nil {
+		//ユーザーが見つからなかった場合
 		return c.JSON(http.StatusOK, echo.Map{
-			"result": 0,
-			"users":  users,
+			"result": -1,
 		})
 	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": 0,
+		"users":  users,
+	})
+}
+
+func GetRoomUsers(c echo.Context) error {
+	db := database.GetDB()
+
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+
+	}
+	fmt.Println(json_map["room_id"])
+	room_id := json_map["room_id"]
+	var user_ids []uint
+	err = db.Model(&model.UserRoom{}).Where("room_id = ?", room_id).Find(&user_ids).Error
+	if err != nil {
+		//ユーザーが見つからなかった場合
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"result":   0,
+		"user_ids": user_ids,
+	})
 }
 
 func GetRooms(c echo.Context) error {
 	db := database.GetDB()
 
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+
 	user := c.Get("user").(*jwtv3.Token)
 	claims := user.Claims.(*model.JwtCustomClaims)
 	// id := claims.ID
-	room_ids := claims.RoomIDs
+	room_ids := []uint{}
+	room_ids_interface, ok := json_map["room_ids"].([]interface{})
+	fmt.Println("---------")
+	fmt.Println(json_map["room_ids"])
+	fmt.Println("---------")
+	if !ok {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -2,
+		})
+	}
+	room_valid_ids := claims.RoomIDs //正しいroom_ids
+	for _, tmp_id := range room_ids_interface {
+		//リクエストされたroom_idが本当にその人が持つroom_idかチェック
+		isContains := Contains(room_valid_ids, uint(tmp_id.(float64)))
+		if !isContains {
+			continue
+		}
+		room_ids = append(room_ids, uint(tmp_id.(float64)))
+	}
+
 	var rooms []model.APIRoom
-	fmt.Println("------")
-	fmt.Println(room_ids)
-	fmt.Println("------")
 
 	if len(room_ids) > 0 {
-		err := db.Debug().Model(&model.Room{}).Find(&rooms, room_ids).Error
+		err := db.Model(&model.Room{}).Find(&rooms, room_ids).Error
 		if err != nil {
 			fmt.Println(err)
 			return c.JSON(http.StatusOK, echo.Map{
-				"result": -1,
+				"result": -3,
 			})
 		}
 	} else {
@@ -395,7 +503,7 @@ func GetMessages(c echo.Context) error {
 	claims := user.Claims.(*model.JwtCustomClaims)
 	id := claims.ID
 	var messages []model.Message
-	err := db.Debug().Model(&model.Message{}).Where("user_id = ?", id).Find(&messages).Error
+	err := db.Model(&model.Message{}).Where("user_id = ?", id).Find(&messages).Error
 	if err != nil {
 		fmt.Println(err)
 	}

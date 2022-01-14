@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 
 export default function MyNav(props) {
   useEffect(() => {
-    console.log(props);
     if (window.innerWidth >= 1024) {
       setIsShowMenuContent(true);
     } else {

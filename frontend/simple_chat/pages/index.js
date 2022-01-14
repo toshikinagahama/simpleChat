@@ -53,7 +53,6 @@ export default function Home(pageProps) {
           let dateTime = new Date(json['exp'] * 1000);
           //console.log(dateTime.toString());
           localStorage.setItem('token', token);
-          setUser(json_data);
           router.push('/user');
         } else {
         }

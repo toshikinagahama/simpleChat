@@ -32,7 +32,8 @@ func NewRouter() (*echo.Echo, error) {
 	router_group.Use(middleware.JWTWithConfig(config))
 	router_group.GET("/auth_user", handler.GetAuthenticatedUser)
 	router_group.POST("/get_users", handler.GetUsers)
-	router_group.GET("/get_rooms", handler.GetRooms)
+	router_group.POST("/get_roomusers", handler.GetRoomUsers)
+	router_group.POST("/get_rooms", handler.GetRooms)
 	router_group.GET("/get_messages", handler.GetMessages)
 	// router_group.GET("", handler.Restricted)
 
