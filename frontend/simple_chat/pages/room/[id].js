@@ -48,7 +48,7 @@ export default function Room(pageProps) {
               tmp_user = tmp_user[0];
               if (tmp_user != null) {
                 let m_new = {
-                  text: m.message,
+                  text: m.text,
                   from_id: tmp_user.id,
                   from: tmp_user.name,
                   icon: tmp_user.icon,
@@ -93,7 +93,7 @@ export default function Room(pageProps) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            room_ids: [parseInt(room_id)],
+            room_ids: [room_id],
           }),
         }).catch(() => null);
         if (res != null) {
@@ -111,7 +111,7 @@ export default function Room(pageProps) {
                   Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                  room_id: parseInt(room_id),
+                  room_id: room_id,
                 }),
               }).catch(() => null);
               if (res != null) {
@@ -126,7 +126,7 @@ export default function Room(pageProps) {
                     Authorization: `Bearer ${token}`,
                   },
                   body: JSON.stringify({
-                    room_ids: [parseInt(room_id)],
+                    room_ids: [room_id],
                   }),
                 }).catch(() => null);
                 if (res != null) {
@@ -142,7 +142,7 @@ export default function Room(pageProps) {
                         tmp_user = tmp_user[0];
                         if (tmp_user != null) {
                           let m_new = {
-                            text: m.message,
+                            text: m.text,
                             from_id: tmp_user.id,
                             from: tmp_user.name,
                             icon: tmp_user.icon,
@@ -183,10 +183,11 @@ export default function Room(pageProps) {
   };
 
   const handleSendBtnClick = async (e) => {
+    console.log('hello');
     socketRef.current.send(
       JSON.stringify({
         command: 1,
-        message: { room_id: parseInt(room_id), user_id: parseInt(user.id), message: message_send },
+        message: { room_id: room_id, user_id: user.id, text: message_send },
       })
     );
     setMessage_send('');

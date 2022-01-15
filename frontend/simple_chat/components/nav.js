@@ -53,7 +53,7 @@ export default function MyNav(props) {
                   部屋一覧
                 </a>
               </Link>
-              <Link href="/user">
+              <Link href="/user_setting">
                 <a
                   href="#"
                   className="block mt-4 lg:inline-block lg:mt-0 text-teal-lighter hover:text-white mr-4"

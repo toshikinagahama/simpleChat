@@ -11,6 +11,7 @@ export default function User(pageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [sercret_key, setSercret_key] = useState('');
 
   useEffect(async () => {}, []);
 
@@ -30,12 +31,17 @@ export default function User(pageProps) {
     setConfirmPassword(e.target.value);
   };
 
+  const handleSercret_keyChange = (e) => {
+    setSercret_key(e.target.value);
+  };
+
   const handleSubmitBtnClick = async (e) => {
     if (password == confirmPassword) {
       const input_info = {
         username,
-        email,
+        // email,
         password,
+        sercret_key,
       };
       const res = await fetch(`http://${domain_db}/signup`, {
         method: 'POST',
@@ -45,6 +51,14 @@ export default function User(pageProps) {
         body: JSON.stringify(input_info),
       }).catch(() => null);
       const json_data = await res.json().catch(() => null);
+      console.log(json_data);
+      const result = json_data['result'];
+      if (result == 0) {
+        alert('登録完了しました');
+        router.push('/');
+      }
+    } else {
+      alert('wrong password');
     }
   };
 
@@ -60,13 +74,13 @@ export default function User(pageProps) {
             placeholder="Username"
             onChange={handleUsernameChange}
           />
-
+          {/* 
           <input
             type="text"
             className="block border border-grey-light w-full p-3 rounded mb-4"
             placeholder="Email"
             onChange={handleEmailChange}
-          />
+          /> */}
 
           <input
             className="block border border-grey-light w-full p-3 rounded mb-4"
@@ -80,6 +94,12 @@ export default function User(pageProps) {
             className="block border border-grey-light w-full p-3 rounded mb-4"
             placeholder="Confirm Password"
             onChange={handleConfirmPasswordChange}
+          />
+          <input
+            type="password"
+            className="block border border-grey-light w-full p-3 rounded mb-4"
+            placeholder="Sercret Key"
+            onChange={handleSercret_keyChange}
           />
 
           <button

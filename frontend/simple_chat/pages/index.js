@@ -8,8 +8,8 @@ import { domain_db } from '../global';
 
 export default function Home(pageProps) {
   const router = useRouter();
-  const [username, setUsername] = useState('test_user1');
-  const [password, setPassword] = useState('test_user1');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [user, setUser] = useRecoilState(userState);
 
   const handleUsernameChange = (e) => {
@@ -84,7 +84,7 @@ export default function Home(pageProps) {
           onChange={handlePasswordChange}
         />
         <div className="m-8">
-          <button className="text-2xl" onClick={handleLoginBtnClick}>
+          <button className="text-xl" onClick={handleLoginBtnClick}>
             ログイン
           </button>
         </div>
