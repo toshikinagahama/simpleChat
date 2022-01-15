@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
+import { domain_db } from '../global';
 
 const Auth = ({ children }) => {
   const [user, setUser] = useRecoilState(userState);
@@ -17,7 +18,7 @@ const Auth = ({ children }) => {
         setComponent(children);
       }
       if (!isFetchData) {
-        const res = await fetch('http://localhost:1323/restricted/auth_user', {
+        const res = await fetch(`http://${domain_db}/restricted/auth_user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
+import { domain_db } from '../global';
 
 export default function Home(pageProps) {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function Home(pageProps) {
   };
 
   const handleLoginBtnClick = async (e) => {
-    const res = await fetch('http://localhost:1323/login', {
+    const res = await fetch(`http://${domain_db}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ export default function Home(pageProps) {
         }
       }
     } else {
-      alert('failed to connect server');
+      alert(' to connect server');
     }
   };
 
@@ -68,7 +69,7 @@ export default function Home(pageProps) {
         <title>Simple Chat sample</title>
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
+      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">
         <div className="m-4">
           <p>input name</p>
         </div>
@@ -84,8 +85,16 @@ export default function Home(pageProps) {
         />
         <div className="m-8">
           <button className="text-2xl" onClick={handleLoginBtnClick}>
-            Login
+            ログイン
           </button>
+        </div>
+        <hr className="border-1 w-3/12"></hr>
+        <div className="m-2">
+          <Link href="/signup">
+            <a href="#" className="text-xs text-gray-300">
+              新規登録
+            </a>
+          </Link>
         </div>
       </main>
     </div>

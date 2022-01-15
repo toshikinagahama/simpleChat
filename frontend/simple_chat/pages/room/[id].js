@@ -5,15 +5,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
 import Image from 'next/image';
+import { human_icon, domain_db } from '../../global';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
 
 export default function Room(pageProps) {
   const router = useRouter();
   const [user, setUser] = useRecoilState(userState);
-  const [messages, setMessages] = useRecoilState(messagesState);
+  const [room_users, setRoom_users] = useState([]);
   const socketRef = useRef();
-  const refMessages = useRef([]);
+  const refRoom_users = useRef([]);
+  const refMessageObjs = useRef([]);
   const room_id = router.query.id;
   const bottomDivRef = useRef(null);
 
@@ -21,41 +23,12 @@ export default function Room(pageProps) {
   const [rooms, setRooms] = useState([]);
 
   const [message_send, setMessage_send] = useState('');
-  const [messageObjs, setMessageObjs] = useState([
-    {
-      text: 'おはよー。今日はとても気分がいいのでどこかにでかけませんか！',
-      from_id: '1',
-      from: 'hama1',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      timestamp: new Date(),
-    },
-    {
-      text: 'おはよー!',
-      from_id: '1',
-      from: 'toshiki',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      timestamp: new Date(),
-    },
-    {
-      text: 'おはよー!!!',
-      from_id: '1',
-      from: 'hama1',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      timestamp: new Date(),
-    },
-    {
-      text: 'おはよー!!!!!!',
-      from_id: 'hama1',
-      from: 'hama1',
-      icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messageObjs, setMessageObjs] = useState([]);
 
   useEffect(async () => {
     // if (socketRef.current != null) return;
     const token = localStorage.getItem('token');
-    socketRef.current = new WebSocket('ws://localhost:1323/ws');
+    socketRef.current = new WebSocket(`ws://${domain_db}/ws`);
 
     socketRef.current.addEventListener('open', function (e) {
       socketRef.current.send(JSON.stringify({ command: 0, data: { token } }));
@@ -70,6 +43,22 @@ export default function Room(pageProps) {
           switch (command) {
             case 1:
               console.log(json_data['message']);
+              const m = json_data['message'];
+              let tmp_user = refRoom_users.current.filter((u) => u.id === m.user_id);
+              tmp_user = tmp_user[0];
+              if (tmp_user != null) {
+                let m_new = {
+                  text: m.message,
+                  from_id: tmp_user.id,
+                  from: tmp_user.name,
+                  icon: tmp_user.icon,
+                  timestamp: new Date(),
+                };
+                setMessageObjs([...refMessageObjs.current, m_new]);
+              } else {
+                console.log('no valid user');
+              }
+
               // setMessages([...refMessages.current, json_data['data']]);
               // console.log(refMessages.current);
               break;
@@ -97,7 +86,7 @@ export default function Room(pageProps) {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!isFetchData) {
-        const res = await fetch('http://localhost:1323/restricted/get_rooms', {
+        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,95 +98,98 @@ export default function Room(pageProps) {
         }).catch(() => null);
         if (res != null) {
           const json_data = await res.json().catch(() => null);
-          console.log(json_data);
+          // console.log(json_data);
           if (json_data['result'] != null) {
             if (json_data['result'] === 0) {
-              
               setIsFetchData(true);
               const res_rooms = json_data['rooms'];
 
-              res = await fetch('http://localhost:1323/restricted/get_users', {
+              res = await fetch(`http://${domain_db}/restricted/get_roomusers`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                  user_ids: [1, 3],
+                  room_id: parseInt(room_id),
                 }),
               }).catch(() => null);
               if (res != null) {
                 const json_data = await res.json().catch(() => null);
-              }
+                // console.log(json_data);
+                setRoom_users(json_data['users']);
+                const tmp_room_users = json_data['users'];
+                res = await fetch(`http://${domain_db}/restricted/get_messages`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    room_ids: [parseInt(room_id)],
+                  }),
+                }).catch(() => null);
+                if (res != null) {
+                  const json_data = await res.json().catch(() => null);
+                  // console.log(json_data);
+                  if (json_data['result'] != null) {
+                    if (json_data['result'] === 0) {
+                      setMessageObjs([]);
+                      let messageObjs_new = [...messageObjs];
+                      json_data['messages'].map((m, index) => {
+                        //そのメッセージの人のデータを取得
+                        let tmp_user = tmp_room_users.filter((u) => u.id === m.user_id);
+                        tmp_user = tmp_user[0];
+                        if (tmp_user != null) {
+                          let m_new = {
+                            text: m.message,
+                            from_id: tmp_user.id,
+                            from: tmp_user.name,
+                            icon: tmp_user.icon,
+                            timestamp: new Date(m.CreatedAt),
+                          };
+                          messageObjs_new.push(m_new);
+                        } else {
+                          console.log('no valid user');
+                        }
+                      });
 
-              res = await fetch('http://localhost:1323/restricted/get_messages', {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-              }).catch(() => null);
-              if (res != null) {
-                const json_data = await res.json().catch(() => null);
-                console.log(json_data);
-                if (json_data['result'] != null) {
-                  if (json_data['result'] === 0) {
-                    setMessages([]);
-                    setMessages(json_data['messages']);
+                      setMessageObjs(messageObjs_new);
+                    }
                   }
                 }
               }
-              console.log(res_rooms);
+
+              // console.log(res_rooms);
             }
           }
         }
       }
     };
     fetchData();
-
-    // refMessages.current = [...messages];
-    // if (messages.length > 0) {
-    //   let m = messages.slice(-1)[0];
-    //   let rooms_new = [...rooms]; //更新用rooms
-    //   console.log(m.CreatedAt);
-    //   for (let i = 0; i < rooms_new.length; i++) {
-    //     if (rooms_new[i].id == m.room_id) {
-    //       rooms_new[i].num_unread++;
-    //       rooms_new[i].last_message = m.message;
-    //       rooms_new[i].last_update = new Date(m.CreatedAt);
-    //     }
-    //   }
-    //   setRooms(rooms_new);
-    // }
     if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
-  }, [rooms, messages, bottomDivRef, user]);
+  }, [rooms, messageObjs, bottomDivRef, user, room_users]);
+
+  useEffect(() => {
+    refRoom_users.current = [...room_users];
+  }, [room_users]);
+
+  useEffect(() => {
+    refMessageObjs.current = [...messageObjs];
+  }, [messageObjs]);
 
   const handleMessageChange = (e) => {
     setMessage_send(e.target.value);
   };
 
   const handleSendBtnClick = async (e) => {
-    // let json_data = {
-    //   message,
-    //   command: '1',
-    //   user_id: user.id,
-    // };
-    setMessageObjs([
-      ...messageObjs,
-      {
-        text: message_send,
-        from: user.name,
-        from_id: user.id,
-        icon: 'https://icooon-mono.com/i/icon_11324/icon_113241_48.png',
-        timestamp: new Date(),
-      },
-    ]);
-    console.log({ room_id: parseInt(room_id), user_id: parseInt(user.id), message: message_send });
     socketRef.current.send(
       JSON.stringify({
         command: 1,
         message: { room_id: parseInt(room_id), user_id: parseInt(user.id), message: message_send },
       })
     );
+    setMessage_send('');
     bottomDivRef.current.scrollIntoView();
   };
 
@@ -221,7 +213,11 @@ export default function Room(pageProps) {
                   <div className="flex justify-start w-full pr-8 py-2" key={index}>
                     <div className="">
                       <div className="w-10 h-10 shadow-lg rounded-full p-2 mx-2">
-                        <img src={messageObj.icon} alt={''} width={80} height={80} />
+                        {messageObj.icon == '' ? (
+                          <img src={human_icon} alt={''} width={80} height={80} />
+                        ) : (
+                          <img src={messageObj.icon} alt={''} width={80} height={80} />
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col justify-start">
@@ -265,7 +261,7 @@ export default function Room(pageProps) {
             <div className="my-2">
               <div className="flex w-full justify-end">
                 <input
-                  className="border-2 flex-grow mx-2 text-xs py-2 px-2"
+                  className="border-2 flex-grow mx-2 py-2 px-2"
                   value={message_send}
                   onChange={handleMessageChange}
                 />

@@ -23,6 +23,7 @@ func NewRouter() (*echo.Echo, error) {
 	router.GET("/ws", handler.Websocket)
 	go handler.WebsocketMessages()
 	router.POST("/login", handler.Login)
+	router.POST("/signup", handler.Signup)
 	router_group := router.Group("/restricted")
 
 	config := middleware.JWTConfig{
@@ -31,10 +32,9 @@ func NewRouter() (*echo.Echo, error) {
 	}
 	router_group.Use(middleware.JWTWithConfig(config))
 	router_group.GET("/auth_user", handler.GetAuthenticatedUser)
-	router_group.POST("/get_users", handler.GetUsers)
 	router_group.POST("/get_roomusers", handler.GetRoomUsers)
 	router_group.POST("/get_rooms", handler.GetRooms)
-	router_group.GET("/get_messages", handler.GetMessages)
+	router_group.POST("/get_messages", handler.GetMessages)
 	// router_group.GET("", handler.Restricted)
 
 	return router, nil

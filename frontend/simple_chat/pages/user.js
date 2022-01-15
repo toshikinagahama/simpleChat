@@ -7,7 +7,7 @@ import { useRecoilState } from 'recoil';
 import Image from 'next/image';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { human_icon } from '../global';
+import { domain_db, human_icon } from '../global';
 
 export default function User(pageProps) {
   const router = useRouter();
@@ -21,49 +21,7 @@ export default function User(pageProps) {
 
   useEffect(async () => {
     const token = localStorage.getItem('token');
-    socketRef.current = new WebSocket('ws://localhost:1323/ws');
-
-    const res = await fetch('http://localhost:1323/restricted/get_messages', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }).catch(() => null);
-    if (res != null) {
-      const json_data = await res.json().catch(() => null);
-      console.log(json_data);
-      if (json_data['result'] != null) {
-        if (json_data['result'] === 0) {
-          setMessages([]);
-          setMessages(json_data['messages']);
-
-          socketRef.current.addEventListener('open', function (e) {
-            socketRef.current.send(JSON.stringify({ command: 0, data: { token } }));
-          });
-
-          // サーバーからデータを受け取る
-          socketRef.current.addEventListener('message', function (e) {
-            try {
-              const json_data = JSON.parse(e.data);
-              const command = json_data['command'];
-              if (command != null) {
-                switch (command) {
-                  case 1:
-                    console.log(json_data['data']);
-                    setMessages([...refMessages.current, json_data['data']]);
-                    console.log(refMessages.current);
-                    break;
-                  default:
-                    break;
-                }
-              }
-            } catch (error) {
-              console.log(error);
-            }
-          });
-        }
-      }
-    }
+    socketRef.current = new WebSocket(`ws://${domain_db}/ws`);
 
     return () => {
       console.log('Disconnecting..');
@@ -98,7 +56,7 @@ export default function User(pageProps) {
     const fetchData = async () => {
       if (!isFetchData) {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:1323/restricted/get_rooms', {
+        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -5,17 +5,18 @@ import (
 	"chat/config"
 	"chat/database"
 	"chat/router"
-	"fmt"
+	"log"
 )
 
 func main() {
+	log.SetFlags(log.Flags() | log.Llongfile)
 	cfg, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("--")
-	fmt.Println(cfg.Version)
-	fmt.Println("--")
+	log.Println("--")
+	log.Println(cfg.Version)
+	log.Println("--")
 
 	database.Init()
 	defer database.Close()
