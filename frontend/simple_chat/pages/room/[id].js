@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
-import Image from 'next/image';
 import { human_icon, domain_db } from '../../global';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
@@ -20,7 +19,7 @@ export default function Room(pageProps) {
   const bottomDivRef = useRef(null);
 
   const [isFetchData, setIsFetchData] = useState(false);
-  const [rooms, setRooms] = useState([]);
+  const [room, setRoom] = useState([]);
 
   const [message_send, setMessage_send] = useState('');
   const [messageObjs, setMessageObjs] = useState([]);
@@ -103,6 +102,7 @@ export default function Room(pageProps) {
             if (json_data['result'] === 0) {
               setIsFetchData(true);
               const res_rooms = json_data['rooms'];
+              setRoom(res_rooms[0]);
 
               res = await fetch(`http://${domain_db}/restricted/get_roomusers`, {
                 method: 'POST',
@@ -168,7 +168,7 @@ export default function Room(pageProps) {
     };
     fetchData();
     if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
-  }, [rooms, messageObjs, bottomDivRef, user, room_users]);
+  }, [room, messageObjs, bottomDivRef, user, room_users]);
 
   useEffect(() => {
     refRoom_users.current = [...room_users];
@@ -202,9 +202,12 @@ export default function Room(pageProps) {
         <div className="flex flex-col items-center justify-center min-h-screen w-screen">
           <Head>
             <title>部屋一覧</title>
+            <meta http-equiv="cache-control" content="no-cache" />
+            <meta http-equiv="expires" content="0" />
+            <meta http-equiv="pragma" content="no-cache" />
           </Head>
 
-          <MyNav title={room_id} />
+          <MyNav title={room.name} />
 
           <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100 pt-4 pb-40">
             {messageObjs.map((messageObj, index) => {

@@ -4,54 +4,20 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
-import Image from 'next/image';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
 import { domain_db, human_icon } from '../global';
 
 export default function User(pageProps) {
-  const router = useRouter();
   const [user, setUser] = useRecoilState(userState);
-  const [messages, setMessages] = useRecoilState(messagesState);
-  const socketRef = useRef();
-  const refMessages = useRef([]);
 
   const [isFetchData, setIsFetchData] = useState(false);
   const [rooms, setRooms] = useState([]);
-
-  useEffect(async () => {
-    const token = localStorage.getItem('token');
-    socketRef.current = new WebSocket(`ws://${domain_db}/ws`);
-
-    return () => {
-      console.log('Disconnecting..');
-      socketRef.current.close();
-      // removeListeners?.();
-    };
-  }, []);
-
-  // useEffect(() => {
-  //   refMessages.current = [...messages];
-  //   if (messages.length > 0) {
-  //     let m = messages.slice(-1)[0];
-  //     let rooms_new = [...rooms]; //更新用rooms
-  //     console.log(m.CreatedAt);
-  //     for (let i = 0; i < rooms_new.length; i++) {
-  //       if (rooms_new[i].id == m.room_id) {
-  //         rooms_new[i].num_unread++;
-  //         rooms_new[i].last_text = m.text;
-  //         rooms_new[i].last_update = new Date(m.CreatedAt);
-  //       }
-  //     }
-  //     setRooms(rooms_new);
-  //   }
-  // }, [messages]);
 
   useEffect(() => {
     if (user == null) {
       return;
     }
-    // console.log(user);
 
     const fetchData = async () => {
       if (!isFetchData) {
@@ -103,6 +69,9 @@ export default function User(pageProps) {
         <div className="flex flex-col items-center justify-center min-h-screen w-full">
           <Head>
             <title>部屋一覧</title>
+            <meta http-equiv="cache-control" content="no-cache" />
+            <meta http-equiv="expires" content="0" />
+            <meta http-equiv="pragma" content="no-cache" />
           </Head>
           <MyNav title="あなたの部屋" />
           <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100">
@@ -123,7 +92,7 @@ export default function User(pageProps) {
                         <p className="text-gray-400 text-sm mt-1">{room.last_text}</p>
                       </div>
                       <div className="px-4 py-2 flex flex-col justify-between">
-                        <p className="text-sm mb-1">
+                        {/* <p className="text-sm mb-1">
                           {`${('0' + room.last_update.getHours()).slice(-2)}:${(
                             '0' + room.last_update.getMinutes()
                           ).slice(-2)}`}
@@ -134,7 +103,7 @@ export default function User(pageProps) {
                               <p className="text-sm text-white text-center">{room.num_unread}</p>
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </a>

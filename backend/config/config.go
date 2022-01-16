@@ -11,6 +11,7 @@ type Config struct {
 	Version    string `yaml:"version"`
 	DBConnect  string `yaml:"dbconnect"`
 	SercretKey string `yaml:"sercretkey"`
+	StaticPath string `yaml:"staticpath"`
 }
 
 func Load() (*Config, error) {
@@ -20,14 +21,14 @@ func Load() (*Config, error) {
 
 	err := viper.ReadInConfig() // 設定ファイルを探索して読み取る
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config file: %s \n", err)
+		return nil, fmt.Errorf("failed to load config file- %s", err)
 	}
 
 	var cfg Config
 
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal error: %s \n", err)
+		return nil, fmt.Errorf("unmarshal error- %s", err)
 	}
 
 	return &cfg, nil

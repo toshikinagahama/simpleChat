@@ -1,8 +1,0 @@
-@startuml 1
-(*) --> "status checkd"
-if "Status?" then
- -> [NG] "exit"
-else
- --> [OK] "echo"
-endif
-@enduml

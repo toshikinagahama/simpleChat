@@ -59,7 +59,7 @@ export default function Home(pageProps) {
         }
       }
     } else {
-      alert(' to connect server');
+      alert('failed to connect server ' + `http://${domain_db}/login`);
     }
   };
 
@@ -67,6 +67,9 @@ export default function Home(pageProps) {
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
         <title>Simple Chat sample</title>
+        <meta http-equiv="cache-control" content="no-cache" />
+        <meta http-equiv="expires" content="0" />
+        <meta http-equiv="pragma" content="no-cache" />
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">

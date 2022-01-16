@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
-import Image from 'next/image';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
 import { domain_db, domain, human_icon } from '../global';
@@ -77,6 +76,9 @@ export default function UserSetting(pageProps) {
         <div className="flex flex-col items-center justify-center min-h-screen w-full">
           <Head>
             <title>自分の設定</title>
+            <meta http-equiv="cache-control" content="no-cache" />
+            <meta http-equiv="expires" content="0" />
+            <meta http-equiv="pragma" content="no-cache" />
           </Head>
           <MyNav title="自分の設定" />
           <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100 space-y-16">
@@ -84,15 +86,18 @@ export default function UserSetting(pageProps) {
               <p>あなたの名前: {user.name}</p>
             </div>
             <div>
-              <p>アイコンを変える</p>
+              <p>あなたのID: {user.id}</p>
+            </div>
+            <div>
+              {/* <p>アイコンを変える</p>
               <div className="w-24 h-24 rounded-full bg-slate-400 bg-opacity-50">
                 <img src={user.icon} width={120} height={120} />
-              </div>
+              </div> */}
             </div>
             <div>
               <p>あなたのQRコード</p>
               <div>
-                <QRCode value={`http://${domain}/add_friends?id=${user.id}`} />
+                <QRCode value={`http://${domain}/add_user_to_room?id=${user.id}`} />
               </div>
             </div>
             {/* <p>シークレットコード：1234</p> */}

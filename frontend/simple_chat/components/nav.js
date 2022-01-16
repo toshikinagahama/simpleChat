@@ -61,12 +61,12 @@ export default function MyNav(props) {
                   自分の設定
                 </a>
               </Link>
-              <Link href="/user">
+              <Link href="/create_room">
                 <a
                   href="#"
                   className="block mt-4 lg:inline-block lg:mt-0 text-teal-lighter hover:text-white mr-4"
                 >
-                  部屋の設定
+                  部屋を作る
                 </a>
               </Link>
               <button

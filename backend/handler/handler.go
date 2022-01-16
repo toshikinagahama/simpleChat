@@ -72,7 +72,6 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 		return nil, fmt.Errorf("not found claims in %s ", tokenstring)
 	}
 
-	// log.Println(claims["id"])
 	user_id_str, ok := claims["id"].(string)
 	user_id := uuid.MustParse(user_id_str)
 	if !ok {
@@ -93,7 +92,6 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 }
 
 func Websocket(c echo.Context) error {
-	log.Println("websocket handler")
 
 	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
@@ -114,9 +112,7 @@ func Websocket(c echo.Context) error {
 		Data    Data `json:"data"`
 	}
 	var res Res
-	log.Println("---!")
 	err = ws.ReadJSON(&res)
-	// log.Println(res)
 	if err != nil {
 		log.Println(err)
 		panic(err)
@@ -180,8 +176,6 @@ func WebsocketMessages() {
 			if !isContain {
 				continue
 			}
-			//log.Println(msg)
-			//log.Println(auth)
 			err := client.WriteJSON(echo.Map{
 				"command": 1,
 				"result":  0,
@@ -206,9 +200,7 @@ func Login(c echo.Context) error {
 		name := json_map["username"]
 		password := json_map["password"]
 		password_byte := []byte(password.(string))
-		hashed, _ := bcrypt.GenerateFromPassword(password_byte, 10)
 
-		log.Println(string(hashed))
 		var user model.User
 		err := db.Where("name = ?", name).First(&user).Select("Users.Name, Rooms.Name").Error
 		if err != nil {
@@ -307,7 +299,6 @@ func GetAuthenticatedUser(c echo.Context) error {
 
 	var auth_user model.User
 	err := db.First(&auth_user, id).Error
-	// log.Println(auth_user)
 	if err != nil {
 		return c.JSON(http.StatusOK, echo.Map{
 			"result": -1,
@@ -329,13 +320,11 @@ func Signup(c echo.Context) error {
 
 	json_map := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
-	log.Println(json_map)
 	if err != nil {
 		return c.JSON(http.StatusOK, echo.Map{
 			"result": -1,
 		})
 	}
-	log.Println(json_map["username"])
 	username, _ := json_map["username"].(string)
 	// email := json_map["email"]
 	password := json_map["password"]
@@ -354,7 +343,6 @@ func Signup(c echo.Context) error {
 	}
 	var users []model.User
 	err = db.Debug().Where("name = ?", username).Find(&users).Error
-	log.Println(len(users))
 	if err != nil {
 		return c.JSON(http.StatusOK, echo.Map{
 			"result": -3,
@@ -379,6 +367,86 @@ func Signup(c echo.Context) error {
 	})
 }
 
+func CreateRoom(c echo.Context) error {
+	db := database.GetDB()
+
+	user := c.Get("user").(*jwtv3.Token)
+	claims := user.Claims.(*model.JwtCustomClaims)
+	user_id := claims.ID
+
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+	roomname, _ := json_map["roomname"].(string)
+	sercret_key := json_map["sercret_key"]
+	if roomname == "" {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -5,
+		})
+	}
+	if sercret_key != "localhost" {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -2,
+		})
+	}
+
+	//ユーザーが見つからなかった場合
+	//登録処理
+	room := model.Room{
+		Name:     roomname,
+		Icon:     "",
+		Password: "",
+	}
+	db.Debug().Create(&room)
+
+	user_room := model.UserRoom{
+		RoomID: room.ID,
+		UserID: user_id,
+	}
+
+	db.Debug().Create(&user_room)
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": 0,
+	})
+}
+
+func AddUserToRoom(c echo.Context) error {
+	db := database.GetDB()
+
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+	room_id_str, _ := json_map["room_id"].(string)
+	room_id := uuid.MustParse(room_id_str)
+	adduser_id_str, _ := json_map["adduser_id"].(string)
+	adduser_id := uuid.MustParse(adduser_id_str)
+
+	//登録処理
+
+	user_room := model.UserRoom{
+		RoomID: room_id,
+		UserID: adduser_id,
+	}
+
+	err = db.Debug().Create(&user_room).Error
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -2,
+		})
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": 0,
+	})
+}
+
 func GetUsers(c echo.Context) error {
 	db := database.GetDB()
 
@@ -390,7 +458,6 @@ func GetUsers(c echo.Context) error {
 		})
 
 	}
-	log.Println(json_map["user_ids"])
 	user_ids := json_map["user_ids"]
 	var users []model.APIUser
 	err = db.Model(&model.User{}).Find(&users, user_ids).Error
