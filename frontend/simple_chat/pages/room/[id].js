@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
-import { human_icon, domain_db } from '../../global';
+import { human_icon, domain_db, http_protcol, ws_protcol } from '../../global';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
 
@@ -27,7 +27,7 @@ export default function Room(pageProps) {
   useEffect(async () => {
     // if (socketRef.current != null) return;
     const token = localStorage.getItem('token');
-    socketRef.current = new WebSocket(`ws://${domain_db}/ws`);
+    socketRef.current = new WebSocket(`${ws_protcol}://${domain_db}/ws`);
 
     socketRef.current.addEventListener('open', function (e) {
       socketRef.current.send(JSON.stringify({ command: 0, data: { token } }));
@@ -85,7 +85,7 @@ export default function Room(pageProps) {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!isFetchData) {
-        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
+        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ export default function Room(pageProps) {
               const res_rooms = json_data['rooms'];
               setRoom(res_rooms[0]);
 
-              res = await fetch(`http://${domain_db}/restricted/get_roomusers`, {
+              res = await fetch(`${http_protcol}://${domain_db}/restricted/get_roomusers`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function Room(pageProps) {
                 // console.log(json_data);
                 setRoom_users(json_data['users']);
                 const tmp_room_users = json_data['users'];
-                res = await fetch(`http://${domain_db}/restricted/get_messages`, {
+                res = await fetch(`${http_protcol}://${domain_db}/restricted/get_messages`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

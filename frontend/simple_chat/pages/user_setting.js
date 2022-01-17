@@ -6,7 +6,7 @@ import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { domain_db, domain, human_icon } from '../global';
+import { domain_db, domain, http_protcol, human_icon } from '../global';
 import QRCode from 'qrcode.react';
 
 export default function UserSetting(pageProps) {
@@ -27,7 +27,7 @@ export default function UserSetting(pageProps) {
     const fetchData = async () => {
       if (!isFetchData) {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
+        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export default function UserSetting(pageProps) {
             <div>
               <p>あなたのQRコード</p>
               <div>
-                <QRCode value={`http://${domain}/add_user_to_room?id=${user.id}`} />
+                <QRCode value={`${http_protcol}://${domain}/add_user_to_room?id=${user.id}`} />
               </div>
             </div>
             {/* <p>シークレットコード：1234</p> */}

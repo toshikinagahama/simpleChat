@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
-import { domain_db } from '../global';
+import { domain_db, http_protcol } from '../global';
 
 export default function Home(pageProps) {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function Home(pageProps) {
   };
 
   const handleLoginBtnClick = async (e) => {
-    const res = await fetch(`http://${domain_db}/login`, {
+    const res = await fetch(`${http_protcol}://${domain_db}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export default function Home(pageProps) {
         }
       }
     } else {
-      alert('failed to connect server ' + `http://${domain_db}/login`);
+      alert('failed to connect server ' + `${http_protcol}://${domain_db}/login`);
     }
   };
 

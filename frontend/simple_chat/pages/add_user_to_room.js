@@ -6,7 +6,7 @@ import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { domain_db, domain, human_icon } from '../global';
+import { domain_db, domain, http_protcol, human_icon } from '../global';
 import QRCode from 'qrcode.react';
 
 export default function AddFriends(pageProps) {
@@ -25,7 +25,7 @@ export default function AddFriends(pageProps) {
     const fetchData = async () => {
       if (!isFetchData) {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
+        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function AddFriends(pageProps) {
       adduser_id,
     };
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://${domain_db}/restricted/add_user_to_room`, {
+    const res = await fetch(`${http_protcol}://${domain_db}/restricted/add_user_to_room`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

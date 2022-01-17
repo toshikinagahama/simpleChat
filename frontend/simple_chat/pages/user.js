@@ -6,7 +6,7 @@ import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
-import { domain_db, human_icon } from '../global';
+import { domain_db, http_protcol, human_icon } from '../global';
 
 export default function User(pageProps) {
   const [user, setUser] = useRecoilState(userState);
@@ -22,7 +22,7 @@ export default function User(pageProps) {
     const fetchData = async () => {
       if (!isFetchData) {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://${domain_db}/restricted/get_rooms`, {
+        const res = await fetch(`${http_protcol}://${domain_db}/restricted/get_rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

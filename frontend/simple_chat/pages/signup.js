@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRecoilState } from 'recoil';
-import { domain_db, human_icon } from '../global';
+import { domain_db, http_protcol, human_icon } from '../global';
 import { useRouter } from 'next/router';
 
 export default function User(pageProps) {
@@ -43,7 +43,7 @@ export default function User(pageProps) {
         password,
         sercret_key,
       };
-      const res = await fetch(`http://${domain_db}/signup`, {
+      const res = await fetch(`${http_protcol}://${domain_db}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
