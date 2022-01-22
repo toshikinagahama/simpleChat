@@ -8,10 +8,12 @@ import (
 
 // マッピング用の構造体
 type Config struct {
-	Version    string `yaml:"version"`
-	DBConnect  string `yaml:"dbconnect"`
-	SercretKey string `yaml:"sercretkey"`
-	StaticPath string `yaml:"staticpath"`
+	Version     string `yaml:"version"`
+	DBConnect   string `yaml:"dbconnect"`
+	SercretKey  string `yaml:"sercretkey"`
+	StaticPath  string `yaml:"staticpath"`
+	BasePath    string `yaml:"basepath"`
+	Environment uint   `yaml:"environment"`
 }
 
 func Load() (*Config, error) {

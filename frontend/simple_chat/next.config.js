@@ -1,3 +1,4 @@
 module.exports = {
-  basePath: '/chat/web',
+  basePath: '/web',
+  // basePath: '/chat/web',
 };

@@ -10,16 +10,13 @@ export default function Home(pageProps) {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useRecoilState(userState);
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    // console.log(username);
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    // console.log(password);
   };
 
   const handleLoginBtnClick = async (e) => {
@@ -33,6 +30,7 @@ export default function Home(pageProps) {
         password,
       }),
     }).catch(() => null);
+
     if (res != null) {
       const json_data = await res.json().catch(() => null);
       //console.log(json_data);

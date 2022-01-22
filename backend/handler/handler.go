@@ -93,6 +93,7 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 
 func Websocket(c echo.Context) error {
 
+	log.Println(c.Request())
 	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
 		log.Fatal(err)

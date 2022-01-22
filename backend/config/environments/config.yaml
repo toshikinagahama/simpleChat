@@ -1,6 +1,8 @@
-version: '1.0.0'
-# dbconnect: 'user=postgres password=postgres dbname=chat_db port=5432 sslmode=disable TimeZone=Asia/Tokyo'
-dbconnect: 'host=chatapp_database user=postgres_user password=wB6WZLNqdl dbname=chat_db port=5432 sslmode=disable TimeZone=Asia/Tokyo'
-sercretkey: 'aGAP3NLVpjwCXddStc2aRT4kwBGahA'
+version: "1.0.0"
+dbconnect: "user=postgres password=postgres dbname=chat_db port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+# dbconnect: "host=chatapp_database user=postgres_user password=wB6WZLNqdl dbname=chat_db port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+sercretkey: "aGAP3NLVpjwCXddStc2aRT4kwBGahA"
 # staticpath: './out'
-staticpath: '/srv/myapp'
+staticpath: "/srv/myapp"
+basepath: "/chat"
+environment: 0 #開発環境 -> 0  本番環境 -> 1
