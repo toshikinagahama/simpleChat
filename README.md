@@ -28,6 +28,43 @@ rectangle {
 @enduml
 ```
 
+# シーケンス
+## ログイン
+```plantuml
+@startuml
+!theme cerulean-outline
+autoactivate on
+actor User
+participant Server
+database DB
+User -> Server: Webページアクセス
+return Webページ返却
+User -> User  : ユーザー名、パスワード入力
+User -> Server: ログイン
+Server -> DB  : ユーザー取得
+return ユーザー返却
+return token返却
+@enduml
+```
+## メッセージ送受信
+```plantuml
+@startuml
+!theme cerulean-outline
+autoactivate on
+actor User
+participant Server
+database DB
+User -> Server: 個別部屋Webページアクセス
+Server -> DB  : 部屋のメッセージ取得
+return メッセージ返却
+return Webページ返却
+User -> Server: メッセージ送信
+Server -> DB  : メッセージinsert
+return success
+return 部屋のメッセージ更新\n（websocketですべてのユーザーに）
+@enduml
+```
+
 # 機能一覧
 | 機能           | 説明                                                       | 備考 |
 | :------------- | ---------------------------------------------------------- | ---- |
@@ -63,7 +100,8 @@ frontendはNext.jsを用いて作成した。
 | recoil       | グローバルに状態を管理する<br>ライブラリ。                  |      |
 
 ## database
-データベースはpostgresを使った。
+データベースはpostgresを使った。テーブルは以下の通り。
+![ER図](./imgs/ER.png)
 
 ## deploy環境
 deploy環境にもdockerをインストールしておき、docker-composeを使って、postgres及びbackendアプリをcontainerで起動させた。
@@ -71,24 +109,79 @@ deploy環境にもdockerをインストールしておき、docker-composeを使
 このとき、port:1323でbackendアプリが起動するので、本番環境のWebサーバー（nginx）でリバースプロキシの設定をして、このアプリに接続するようにした。
 
 # 1. ビルド手順
-
-### 1.0.1. backend のビルド
-
+## ローカル環境での作業
+1. 本番環境か、開発環境かによって環境変数を変える。
+2. frontendアプリのbuild
+   ```
+   cd frontend/simple_chat
+   yarn build
+   ```
+   これによって、`frontend/simple_chat/out`
+   フォルダに、buildされる。
+3. backendアプリのbuild
+   ```
     cd backend
     make build
+   ```
+   で`./bin/main` が出来上がる。
+4. frontendアプリでbuildされたoutフォルダをコピー。
+   ```
+   cp -r ./frontend/simple_chat/out/ ./backend/out/
+   ```
+5. 本番（deploy）サーバーに必要なファイルをコピー。
+   ```
+   simpleChat
+   ├──backend
+   │     ├── Dockerfile
+   │     ├── bin
+   │     │   └── main
+   │     ├── config
+   │     │   ├── config.go
+   │     │   └── environments
+   │     │       └── config.yaml
+   │     └── out
+   │         ├── 404.html
+   │         ├── _next
+   │         ├── add_user_to_room.html
+   │         ├── create_room.html
+   │         ├── favicon.ico
+   │         ├── index.html
+   │         ├── room
+   │         │   └── [id].html
+   │         ├── signup.html
+   │         ├── user.html
+   │         ├── user_setting.html
+   │         └── vercel.svg
+   ├──database
+   │     ├── 01_createdb.sql
+   │     └── Dockerfile
+   ├──docker-compose.yml
+   └──.env
+   ```
+## 本番サーバー側での作業
+6. containerの起動
+   上記でコピーしたフォルダsimpleChat内で、
+  ```
+  docker-compose up -d
+  ```
+  を実行し、containerを起動する。
 
-で`./bin/main` が出来上がる。
-※go の CORS 設定は解除しておかないとだめ。
-
-## 1.1. frontend のビルド
-
-まず最初に、global.jsのdomain_dbとdomainをコンテナの host に書き換える。次にデプロイ先のサブディレクトリを指定するために、
-
-    cd frontend
-    yarn build
-
- このあと、作成された out ファイルを webserver フォルダに移動。
-※next の`<Image />`が入ってるとうまく行かないので、今回は使わない。`<img />`タグを変わりに使った。
+7. nginxの設定
+   ```
+    location /chat {
+      rewrite /chat/(.*) /$1 break;
+      proxy_pass http://localhost:1323;
+      proxy_redirect default;
+    }
+   ```
+   でリバースプロキシを設定し、
+   ```
+   sudo nginx -s reload
+   ```
+   でnginxをreloadすると、
+   https://hostname/chat/web
+   でアクセスが可能となる。
+   ※websocketを使うので、nginxでその設定をするのも忘れないように。
 
 # 2. 本当はやりたいこと
 
