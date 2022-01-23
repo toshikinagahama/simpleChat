@@ -9,7 +9,11 @@ import (
 // マッピング用の構造体
 type Config struct {
 	Version     string `yaml:"version"`
-	DBConnect   string `yaml:"dbconnect"`
+	DBUser      string `yaml:"dbuser"`
+	DBPassword  string `yaml:"dbpassword"`
+	DBName      string `yaml:"dbname"`
+	DBHost      string `yaml:"dbhost"`
+	DBPort      uint   `yaml:"dbport"`
 	SercretKey  string `yaml:"sercretkey"`
 	StaticPath  string `yaml:"staticpath"`
 	BasePath    string `yaml:"basepath"`

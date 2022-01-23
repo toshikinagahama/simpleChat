@@ -3,6 +3,7 @@ package database
 import (
 	"chat/config"
 	"chat/model"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -17,8 +18,9 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	var dsn = fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=disable TimeZone=Asia/Tokyo", cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost, cfg.DBPort)
 	db, err = gorm.Open(postgres.New(postgres.Config{
-		DSN:                  cfg.DBConnect,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 	if err != nil {
