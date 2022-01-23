@@ -4,7 +4,8 @@ go 1.16
 
 require (
 	github.com/99designs/gqlgen v0.14.0
-	github.com/cosmtrek/air v1.27.8 // indirect
+	github.com/cosmtrek/air v1.27.9 // indirect
+	github.com/creack/pty v1.1.11 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/google/uuid v1.3.0
@@ -18,7 +19,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.2.0
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
-	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/gorm v1.22.4
 )

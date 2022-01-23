@@ -36,7 +36,7 @@ func NewRouter() (*echo.Echo, error) {
 		router.Use(middleware.CORS())
 	}
 
-	router.GET("/backend/ws", handler.Websocket)
+	router.GET(cfg.BasePath+"/backend/ws", handler.Websocket)
 	go handler.WebsocketMessages()
 
 	router.POST(cfg.BasePath+"/backend/login", handler.Login)
