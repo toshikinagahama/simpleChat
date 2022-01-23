@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+  chatapp_database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    #image: chatapp_database
+    volumes:
+     - chat_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=wB6WZLNqdl
+      - POSTGRES_DB=chat_db
+      - PGTZ=Asia/Tokyo
+    restart: always
+
+  chatapp_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    #image: chatapp_backend
+    ports:
+      - 1323:1323
+    restart: always
+  # chatapp_webserver:
+  #   build:
+  #     context: ./webserver
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8080:80
+  #   restart: always
+
+volumes:
+  chat_db_data:

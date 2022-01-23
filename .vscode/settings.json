@@ -6,7 +6,7 @@
       "server": "localhost",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "postgres_chat_db",
+      "name": "chat_db",
       "database": "chat_db",
       "username": "postgres",
       "password": "postgres"

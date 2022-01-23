@@ -4,6 +4,7 @@ import (
 	"chat/config"
 	"chat/model"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,6 +25,9 @@ func Init() {
 		panic(err)
 	}
 
+	//Enable to use uuid
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
+
 	//Migrate
 	db.AutoMigrate(&model.User{})
 	db.AutoMigrate(&model.Room{})
@@ -36,7 +40,9 @@ func Init() {
 		//db.Unscoped().Delete(model.Room{}, "id >= ?", 0)
 		err = db.Where("name = ?", "test_user1").First(&user).Error
 		if err != nil {
-			user := model.User{Name: "test_user1", Password: "test_user1"}
+			password_byte := []byte("test_user1")
+			hashed, _ := bcrypt.GenerateFromPassword(password_byte, 10)
+			user := model.User{Name: "test_user1", Password: string(hashed)}
 			db.Create(&user)
 		}
 	}
@@ -44,7 +50,9 @@ func Init() {
 		var user model.User
 		err = db.Where("name = ?", "test_user2").First(&user).Error
 		if err != nil {
-			user := model.User{Name: "test_user2", Password: "test_user2"}
+			password_byte := []byte("test_user2")
+			hashed, _ := bcrypt.GenerateFromPassword(password_byte, 10)
+			user := model.User{Name: "test_user2", Password: string(hashed)}
 			db.Create(&user)
 		}
 	}
@@ -67,40 +75,24 @@ func Init() {
 	{
 		var user model.User
 		err = db.Where("name = ?", "test_user1").First(&user).Error
-		if err != nil {
-			panic(err)
-		}
-		var room model.Room
-		err = db.Where("name = ?", "test_room1").First(&room).Error
-		if err != nil {
-			panic(err)
-		}
-		var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-		db.Create(&user_room)
-	}
-	{
-		var user model.User
-		err = db.Where("name = ?", "test_user1").First(&user).Error
-		if err != nil {
-			panic(err)
-		}
-		var room model.Room
-		err = db.Where("name = ?", "test_room2").First(&room).Error
-		if err != nil {
-			panic(err)
-		}
-		var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-		db.Create(&user_room)
-	}
-	{
-		var user model.User
-		err = db.Where("name = ?", "test_user2").First(&user).Error
 		if err == nil {
 			var room model.Room
 			err = db.Where("name = ?", "test_room1").First(&room).Error
 			if err == nil {
 				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				db.Create(&user_room)
+				err = db.Create(&user_room).Error
+			}
+		}
+	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user1").First(&user).Error
+		if err == nil {
+			var room model.Room
+			err = db.Where("name = ?", "test_room2").First(&room).Error
+			if err == nil {
+				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+				err = db.Create(&user_room).Error
 			}
 		}
 	}
@@ -112,7 +104,19 @@ func Init() {
 			err = db.Where("name = ?", "test_room1").First(&room).Error
 			if err == nil {
 				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
-				db.Create(&user_room)
+				err = db.Create(&user_room).Error
+			}
+		}
+	}
+	{
+		var user model.User
+		err = db.Where("name = ?", "test_user2").First(&user).Error
+		if err == nil {
+			var room model.Room
+			err = db.Where("name = ?", "test_room1").First(&room).Error
+			if err == nil {
+				var user_room = model.UserRoom{UserID: user.ID, RoomID: room.ID}
+				err = db.Create(&user_room).Error
 			}
 		}
 	}
@@ -123,7 +127,7 @@ func Init() {
 	// 		var room model.Room
 	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
 	// 		if err == nil {
-	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Message: "hello from test_user1", ReadCount: 0}
+	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Text: "hello from test_user1", ReadCount: 0}
 	// 			db.Create(&message)
 	// 		}
 	// 	}
@@ -135,7 +139,7 @@ func Init() {
 	// 		var room model.Room
 	// 		err = db.Where("name = ?", "test_room1").First(&room).Error
 	// 		if err == nil {
-	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Message: "hello from test_user2", ReadCount: 0}
+	// 			var message = model.Message{UserID: user.ID, RoomID: room.ID, Text: "hello from test_user2", ReadCount: 0}
 	// 			db.Create(&message)
 	// 		}
 	// 	}

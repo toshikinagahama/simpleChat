@@ -1,22 +1,30 @@
 package model
 
 import (
+	"time"
+
 	jwtv3 "github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type JwtCustomClaims struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	RoomIDs []uint `json:"room_id"` //room_idもトークンに含む
+	ID      uuid.UUID   `json:"id" gorm:"type:uuid"`
+	Name    string      `json:"name"`
+	RoomIDs []uuid.UUID `json:"room_ids"` //room_idsもトークンに含む
 	jwtv3.StandardClaims
 }
 
 type Auth struct {
-	UserID uint `json:"user_id"`
+	UserID  uuid.UUID   `json:"user_id" gorm:"type:uuid"`
+	RoomIDs []uuid.UUID `json:"room_ids"`
 }
 type User struct {
-	gorm.Model
+	ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+
 	Name     string    `json:"name"`
 	Password string    `json:"password"`
 	Icon     string    `json:"icon" gorm:"size:100000; default:''"`
@@ -25,13 +33,17 @@ type User struct {
 }
 
 type APIUser struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-	Icon string `json:"icon" gorm:"size:100000; default:''"`
+	ID   uuid.UUID `json:"id" gorm:"type:uuid"`
+	Name string    `json:"name"`
+	Icon string    `json:"icon" gorm:"size:100000; default:''"`
 }
 
 type Room struct {
-	gorm.Model
+	ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Icon     string `json:"icon" gorm:"size:100000; default:''"`
@@ -40,20 +52,27 @@ type Room struct {
 }
 
 type UserRoom struct {
-	UserID uint `json:"user_id"`
-	RoomID uint `json:"room_id"`
+	UserID uuid.UUID `json:"user_id" gorm:"type:uuid"`
+	RoomID uuid.UUID `json:"room_id" gorm:"type:uuid"`
 }
 
 type APIRoom struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-	Icon string `json:"icon"`
+	ID      uuid.UUID   `json:"id" gorm:"type:uuid"`
+	Name    string      `json:"name"`
+	Icon    string      `json:"icon"`
+	UserIDs []uuid.UUID `json:"user_ids"`
 }
 
 type Message struct {
 	gorm.Model
-	Message   string `json:"message"`
-	ReadCount uint   `json:"read_count"`
-	UserID    uint   `json:"user_id"`
-	RoomID    uint   `json:"room_id"`
+	Text      string    `json:"text"`
+	ReadCount uint      `json:"read_count"`
+	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid"`
+	RoomID    uuid.UUID `json:"room_id" gorm:"type:uuid"`
+}
+
+type APIMessage struct {
+	RoomID uuid.UUID `json:"room_id"  gorm:"type:uuid"`
+	UserID uuid.UUID `json:"user_id"  gorm:"type:uuid"`
+	Text   string    `json:"text"`
 }

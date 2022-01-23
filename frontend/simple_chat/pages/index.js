@@ -4,25 +4,23 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
+import { domain_db, http_protcol } from '../global';
 
 export default function Home(pageProps) {
   const router = useRouter();
-  const [username, setUsername] = useState('test_user1');
-  const [password, setPassword] = useState('test_user1');
-  const [user, setUser] = useRecoilState(userState);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
-    // console.log(username);
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    // console.log(password);
   };
 
   const handleLoginBtnClick = async (e) => {
-    const res = await fetch('http://localhost:1323/login', {
+    const res = await fetch(`${http_protcol}://${domain_db}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,6 +30,7 @@ export default function Home(pageProps) {
         password,
       }),
     }).catch(() => null);
+
     if (res != null) {
       const json_data = await res.json().catch(() => null);
       //console.log(json_data);
@@ -53,13 +52,12 @@ export default function Home(pageProps) {
           let dateTime = new Date(json['exp'] * 1000);
           //console.log(dateTime.toString());
           localStorage.setItem('token', token);
-          setUser(json_data);
           router.push('/user');
         } else {
         }
       }
     } else {
-      alert('failed to connect server');
+      alert('failed to connect server ' + `${http_protcol}://${domain_db}/login`);
     }
   };
 
@@ -67,9 +65,12 @@ export default function Home(pageProps) {
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
         <title>Simple Chat sample</title>
+        <meta http-equiv="cache-control" content="no-cache" />
+        <meta http-equiv="expires" content="0" />
+        <meta http-equiv="pragma" content="no-cache" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
+      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">
         <div className="m-4">
           <p>input name</p>
         </div>
@@ -84,9 +85,17 @@ export default function Home(pageProps) {
           onChange={handlePasswordChange}
         />
         <div className="m-8">
-          <button className="text-2xl" onClick={handleLoginBtnClick}>
-            Login
+          <button className="text-xl" onClick={handleLoginBtnClick}>
+            ログイン
           </button>
+        </div>
+        <hr className="border-1 w-3/12"></hr>
+        <div className="m-2">
+          <Link href="/signup">
+            <a href="#" className="text-xs text-gray-300">
+              新規登録
+            </a>
+          </Link>
         </div>
       </main>
     </div>

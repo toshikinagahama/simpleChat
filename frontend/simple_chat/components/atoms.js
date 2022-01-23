@@ -9,11 +9,7 @@ export const countState = atom({
 //user
 export const userState = atom({
   key: 'user',
-  default: {
-    id: '1',
-    name: '',
-    rooms: [{ name: 'aaa' }],
-  },
+  default: null,
 });
 
 //message
