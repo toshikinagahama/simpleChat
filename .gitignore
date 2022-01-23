@@ -1,4 +1,4 @@
 /.env
 /backend/out/
 /frontend/simple_chat/out/
-*/config.yaml
+config.yaml
