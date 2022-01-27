@@ -199,17 +199,18 @@ export default function Room(pageProps) {
       {user == null ? (
         <div>loading</div>
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-screen w-screen">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen w-screen">
           <Head>
             <title>部屋一覧</title>
-            <meta http-equiv="cache-control" content="no-cache" />
-            <meta http-equiv="expires" content="0" />
-            <meta http-equiv="pragma" content="no-cache" />
+            <meta httpEquiv="cache-control" content="no-cache" />
+            <meta httpEquiv="expires" content="0" />
+            <meta httpEquiv="pragma" content="no-cache" />
           </Head>
 
           <MyNav title={room.name} />
+          <div className="m-4"></div>
 
-          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100 pt-4 pb-40">
+          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-slate-50 bg-opacity-40 pt-4 pb-40">
             {messageObjs.map((messageObj, index) => {
               if (messageObj.from_id != user.id) {
                 //自分以外
@@ -261,7 +262,7 @@ export default function Room(pageProps) {
             })}
             <div ref={bottomDivRef}></div>
           </main>
-          <div className="sticky bottom-0 container">
+          <div className="bg-slate-50 bg-opacity-40 sticky bottom-0 container">
             <div className="my-2">
               <div className="flex w-full justify-end">
                 <input

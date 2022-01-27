@@ -67,9 +67,9 @@ export default function Home(pageProps) {
     <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
         <title>Simple Chat sample</title>
-        <meta http-equiv="cache-control" content="no-cache" />
-        <meta http-equiv="expires" content="0" />
-        <meta http-equiv="pragma" content="no-cache" />
+        <meta httpEquiv="cache-control" content="no-cache" />
+        <meta httpEquiv="expires" content="0" />
+        <meta httpEquiv="pragma" content="no-cache" />
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">

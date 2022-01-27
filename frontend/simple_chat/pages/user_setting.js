@@ -73,15 +73,16 @@ export default function UserSetting(pageProps) {
       {user == null ? (
         <div>Loading</div>
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-screen w-full">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen w-full">
           <Head>
             <title>自分の設定</title>
-            <meta http-equiv="cache-control" content="no-cache" />
-            <meta http-equiv="expires" content="0" />
-            <meta http-equiv="pragma" content="no-cache" />
+            <meta httpEquiv="cache-control" content="no-cache" />
+            <meta httpEquiv="expires" content="0" />
+            <meta httpEquiv="pragma" content="no-cache" />
           </Head>
           <MyNav title="自分の設定" />
-          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100 space-y-16">
+          <div className="m-4"></div>
+          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-slate-50 bg-opacity-40 space-y-16">
             <div>
               <p>あなたの名前: {user.name}</p>
             </div>
