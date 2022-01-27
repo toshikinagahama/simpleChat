@@ -5,6 +5,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import { domain_db, http_protcol } from '../global';
+import { FaUser, FaKey } from 'react-icons/fa';
+import { useSpring, animated } from 'react-spring';
 
 export default function Home(pageProps) {
   const router = useRouter();
@@ -62,7 +64,7 @@ export default function Home(pageProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
         <title>Simple Chat sample</title>
         <meta http-equiv="cache-control" content="no-cache" />
@@ -71,31 +73,53 @@ export default function Home(pageProps) {
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">
-        <div className="m-4">
-          <p>input name</p>
-        </div>
-        <input className="border-2" value={username} onChange={handleUsernameChange} />
-        <div className="m-4">
-          <p>input password</p>
-        </div>
-        <input
-          className="border-2"
-          value={password}
-          type="password"
-          onChange={handlePasswordChange}
-        />
-        <div className="m-8">
-          <button className="text-xl" onClick={handleLoginBtnClick}>
-            ログイン
-          </button>
-        </div>
-        <hr className="border-1 w-3/12"></hr>
-        <div className="m-2">
-          <Link href="/signup">
-            <a href="#" className="text-xs text-gray-300">
-              新規登録
-            </a>
-          </Link>
+        <div className="flex flex-col items-center justify-center px-20 py-20 text-center text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40">
+          <div className="flex flex-row justify-start items-center shadow-inner rounded-3xl bg-slate-50 overflow-hidden">
+            <div className="w-12 h-12 rounded-full flex flex-row justify-center items-center">
+              <div className="flex flex-col justify-center items-center">
+                <FaUser size="1.5rem" />
+              </div>
+            </div>
+            <input
+              className="ml-4 bg-transparent focus:outline-none"
+              value={username}
+              placeholder="username"
+              onChange={handleUsernameChange}
+            />
+          </div>
+          <div className="m-4"></div>
+          <div className="flex flex-row justify-start items-center shadow-inner rounded-3xl bg-slate-50">
+            <div className="w-12 h-12 rounded-full flex flex-row justify-center items-center">
+              <div className="flex flex-col justify-center items-center">
+                <FaKey size="1.5rem" />
+              </div>
+            </div>
+            <input
+              className="ml-4 bg-transparent focus:outline-none"
+              value={password}
+              placeholder="password"
+              onChange={handlePasswordChange}
+            />
+          </div>
+          <div className="mt-16 mb-4 w-full">
+            <button
+              className="text-xl  w-full py-4 text-gray-600 rounded-md bg-white bg-opacity-90 shadow-lg shadow-cyan-700"
+              onClick={handleLoginBtnClick}
+            >
+              Login
+            </button>
+          </div>
+          <hr className="mt-4 border-1 w-full"></hr>
+          <div className="mt-8 w-full">
+            <Link href="/signup">
+              <button
+                href="#"
+                className="text-sm w-full py-2 text-gray-600 rounded-md bg-white bg-opacity-90 shadow-lg shadow-cyan-700"
+              >
+                Sigin up
+              </button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>
