@@ -6,6 +6,7 @@ import { userState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
 import { domain_db, http_protcol, ws_protcol } from '../../global';
 import { FaUser } from 'react-icons/fa';
+import { isMobile } from 'react-device-detect';
 import Auth from '../../components/auth';
 import MyNav from '../../components/nav';
 
@@ -322,7 +323,7 @@ export default function Room(pageProps) {
                       }
                     } else {
                       if (!typing) {
-                        if (e.key == 'Enter') {
+                        if (e.key == 'Enter' && !isMobile) {
                           e.preventDefault();
                           handleSendBtnClick();
                         }
