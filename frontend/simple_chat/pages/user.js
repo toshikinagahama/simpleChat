@@ -7,6 +7,7 @@ import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
 import { domain_db, http_protcol, human_icon } from '../global';
+import { MdMeetingRoom } from 'react-icons/md';
 
 export default function User(pageProps) {
   const [user, setUser] = useRecoilState(userState);
@@ -81,12 +82,10 @@ export default function User(pageProps) {
                 <Link href={'/room/' + room.id} key={index} className="mt-4">
                   <a className="w-full">
                     <div className="w-full text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40 py-4 flex mb-4">
-                      <div className="">
-                        <img
-                          className="w-16 h-16 shadow-lg rounded-full mx-2 object-contain"
-                          src={room.icon}
-                          alt={''}
-                        />
+                      <div className="flex flex-col justify-center items-center w-16 h-16 shadow-lg rounded-full bg-slate-50 bg-opacity-20 mx-2">
+                        <div className="flex flex-row justify-center items-center rounded-full">
+                          <MdMeetingRoom size="2.5rem" />
+                        </div>
                       </div>
                       <div className="flex-grow text-left px-4 py-2 flex flex-col justify-center">
                         <p className="text-md mb-1">{room.name}</p>

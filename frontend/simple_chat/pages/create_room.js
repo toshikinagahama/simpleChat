@@ -5,6 +5,7 @@ import { useRecoilState } from 'recoil';
 import { domain_db, http_protcol, human_icon } from '../global';
 import { useRouter } from 'next/router';
 import Auth from '../components/auth';
+import MyNav from '../components/nav';
 
 export default function User(pageProps) {
   const router = useRouter();
@@ -54,11 +55,13 @@ export default function User(pageProps) {
   return (
     <Auth>
       <Head>
+        <title>部屋の作成</title>
         <meta httpEquiv="cache-control" content="no-cache" />
         <meta httpEquiv="expires" content="0" />
         <meta httpEquiv="pragma" content="no-cache" />
       </Head>
       <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono min-h-screen flex flex-col">
+        <MyNav title="部屋の作成" />
         <div className="container max-w-sm mx-auto flex-1 flex flex-col items-center justify-center px-2">
           <div className="bg-slate-50 bg-opacity-40 px-6 py-8 rounded shadow-md text-black w-full">
             <h1 className="mb-8 text-xl text-center">部屋を作成する</h1>
