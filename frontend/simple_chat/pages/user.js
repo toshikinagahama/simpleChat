@@ -2,11 +2,12 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
-import { userState, messagesState } from '../components/atoms';
+import { userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';
 import { domain_db, http_protcol, human_icon } from '../global';
+import { MdMeetingRoom } from 'react-icons/md';
 
 export default function User(pageProps) {
   const [user, setUser] = useRecoilState(userState);
@@ -66,29 +67,28 @@ export default function User(pageProps) {
       {user == null ? (
         <div>Loading</div>
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-screen w-full">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen w-full">
           <Head>
             <title>部屋一覧</title>
-            <meta http-equiv="cache-control" content="no-cache" />
-            <meta http-equiv="expires" content="0" />
-            <meta http-equiv="pragma" content="no-cache" />
+            <meta httpEquiv="cache-control" content="no-cache" />
+            <meta httpEquiv="expires" content="0" />
+            <meta httpEquiv="pragma" content="no-cache" />
           </Head>
           <MyNav title="あなたの部屋" />
-          <main className="flex flex-col items-center justify-start w-full flex-1 container bg-zinc-100">
+          <main className="flex flex-col items-center justify-start w-full flex-1 container">
+            <div className="m-4"></div>
             {rooms.map((room, index) => {
               return (
-                <Link href={'/room/' + room.id} key={index}>
+                <Link href={'/room/' + room.id} key={index} className="mt-4">
                   <a className="w-full">
-                    <div className="w-full border-b-2 border-zinc-300 py-4 flex">
-                      <div className="">
-                        <img
-                          className="w-16 h-16 shadow-lg rounded-full mx-2 object-contain"
-                          src={room.icon}
-                          alt={''}
-                        />
+                    <div className="w-full text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40 py-4 flex mb-4">
+                      <div className="flex flex-col justify-center items-center w-16 h-16 shadow-lg rounded-full bg-slate-50 bg-opacity-20 mx-2">
+                        <div className="flex flex-row justify-center items-center rounded-full">
+                          <MdMeetingRoom size="2.5rem" />
+                        </div>
                       </div>
                       <div className="flex-grow text-left px-4 py-2 flex flex-col justify-center">
-                        <p className="text-sm mb-1">{room.name}</p>
+                        <p className="text-md mb-1">{room.name}</p>
                         <p className="text-gray-400 text-sm mt-1">{room.last_text}</p>
                       </div>
                       <div className="px-4 py-2 flex flex-col justify-between">

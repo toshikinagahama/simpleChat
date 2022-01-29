@@ -55,6 +55,7 @@ func NewRouter() (*echo.Echo, error) {
 	router_group.POST("/get_messages", handler.GetMessages)
 	router_group.POST("/create_room", handler.CreateRoom)
 	router_group.POST("/add_user_to_room", handler.AddUserToRoom)
+	router_group.POST("/update_user", handler.UpdateUser)
 
 	return router, nil
 

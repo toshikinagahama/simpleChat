@@ -16,6 +16,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 // 接続されるクライアント
@@ -614,6 +618,49 @@ func GetMessages(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"result":   0,
 		"messages": messages,
+	})
+}
+
+func UpdateUser(c echo.Context) error {
+	db := database.GetDB()
+
+	user := c.Get("user").(*jwtv3.Token)
+	claims := user.Claims.(*model.JwtCustomClaims)
+	id := claims.ID
+	json_map := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&json_map)
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+
+	icon_str := json_map["icon"].(string)
+	// icon_rawdata, _ := base64.StdEncoding.DecodeString(icon_str)
+
+	//decode image
+	// imgSrc, t, err := image.Decode(bytes.NewReader(icon_rawdata))
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return c.JSON(http.StatusOK, echo.Map{
+	// 		"result": -1,
+	// 	})
+	// }
+	// log.Println("Type of image:", t)
+
+	// //rectange of image
+	// rctSrc := imgSrc.Bounds()
+	// log.Println("Width:", rctSrc.Dx())
+	// log.Println("Height:", rctSrc.Dy())
+
+	err = db.Debug().Model(&model.User{}).Where("id = ?", id).Update("icon", icon_str).Error
+	if err != nil {
+		return c.JSON(http.StatusOK, echo.Map{
+			"result": -1,
+		})
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"result": 0,
 	})
 }
 

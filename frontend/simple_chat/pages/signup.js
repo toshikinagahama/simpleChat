@@ -63,11 +63,11 @@ export default function User(pageProps) {
   };
 
   return (
-    <div className="bg-grey-lighter min-h-screen flex flex-col">
+    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono min-h-screen flex flex-col">
       <Head>
-        <meta http-equiv="cache-control" content="no-cache" />
-        <meta http-equiv="expires" content="0" />
-        <meta http-equiv="pragma" content="no-cache" />
+        <meta httpEquiv="cache-control" content="no-cache" />
+        <meta httpEquiv="expires" content="0" />
+        <meta httpEquiv="pragma" content="no-cache" />
       </Head>
       <div className="container max-w-sm mx-auto flex-1 flex flex-col items-center justify-center px-2">
         <div className="bg-white px-6 py-8 rounded shadow-md text-black w-full">

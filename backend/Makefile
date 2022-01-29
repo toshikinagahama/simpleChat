@@ -11,6 +11,9 @@ GO_TEST	 = $(GO) test -v
 GO_VET	  = $(GO) vet
 GO_LDFLAGS  = -ldflags="-s -w"
 GOOS		= linux
+GOARCH      = amd64
+# GOOS        = darwin # for mac m1
+# GOARCH      = arm64 # for mac m1
 
 ### ターゲットパラメータ
 EXECUTABLES = bin/main
@@ -40,4 +43,4 @@ chkfmt:
 ### 実行ファイルのビルドルール
 
 bin/main:
-	env GO111MODULE=on GOOS=$(GOOS) $(GO_BUILD) $(GO_LDFLAGS) -o $@
+	env DBUSER=${DBUSER} GO111MODULE=on GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO_BUILD) $(GO_LDFLAGS) -o $@
