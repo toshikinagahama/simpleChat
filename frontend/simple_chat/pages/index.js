@@ -2,16 +2,45 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
-import { userState, messagesState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import { domain_db, http_protcol } from '../global';
 import { FaUser, FaKey } from 'react-icons/fa';
-import { useSpring, animated } from 'react-spring';
+import { useSpring, animated, config } from 'react-spring';
 
 export default function Home(pageProps) {
   const router = useRouter();
+  const [alert, setAlert] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const duration = 200;
+
+  const props1 = useSpring({
+    to: { scale: 1, opacity: 1 },
+    from: { scale: 1.1, opacity: 0 },
+    config: { duration },
+    delay: 0,
+  });
+
+  const props2 = useSpring({
+    to: { scale: 1, opacity: 1 },
+    from: { scale: 1.1, opacity: 0 },
+    config: { duration },
+    delay: duration * 1,
+  });
+
+  const props3 = useSpring({
+    to: { scale: 1, opacity: 1 },
+    from: { scale: 1.1, opacity: 0 },
+    config: { duration },
+    delay: duration * 2,
+  });
+
+  const props4 = useSpring({
+    to: { scale: 1, opacity: 1 },
+    from: { scale: 1.1, opacity: 0 },
+    config: { duration },
+    delay: duration * 3,
+  });
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -31,9 +60,15 @@ export default function Home(pageProps) {
         username,
         password,
       }),
-    }).catch(() => null);
+    }).catch((error) => {
+      console.log(error);
+    });
 
     if (res != null) {
+      //認証失敗
+      if (res.status == 401) {
+        setAlert('Wrong username or password');
+      }
       const json_data = await res.json().catch(() => null);
       //console.log(json_data);
       if (json_data != null) {
@@ -59,12 +94,12 @@ export default function Home(pageProps) {
         }
       }
     } else {
-      alert('failed to connect server ' + `${http_protcol}://${domain_db}/login`);
+      setAlert('failed to connect server ' + `${http_protcol}://${domain_db}/login`);
     }
   };
 
   return (
-    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 font-mono flex flex-col items-center justify-center min-h-screen py-2 overflow-hidden">
       <Head>
         <title>Simple Chat sample</title>
         <meta httpEquiv="cache-control" content="no-cache" />
@@ -72,10 +107,14 @@ export default function Home(pageProps) {
         <meta httpEquiv="pragma" content="no-cache" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center container">
-        <div className="flex flex-col items-center justify-center px-20 py-20 text-center text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40">
-          <div className="flex flex-row justify-start items-center shadow-inner rounded-3xl bg-slate-50 overflow-hidden">
-            <div className="w-12 h-12 rounded-full flex flex-row justify-center items-center">
+      <main className="flex flex-col items-center justify-center w-full px-10 text-center container">
+        <form className="flex flex-col items-center justify-center max-w-full px-10 py-20 text-center text-gray-700 border-[1px] border-opacity-30 rounded-md bg-slate-50 bg-opacity-40">
+          <p className="text-red-600 text-sm mb-8 max-w-[18rem] break-words">{alert}</p>
+          <animated.div
+            style={props1}
+            className="flex flex-row justify-start items-center w-full max-w-sm shadow-inner rounded-3xl bg-slate-50 overflow-hidden"
+          >
+            <div className="ml-4 w-12 h-12 rounded-full flex flex-row justify-center items-center">
               <div className="flex flex-col justify-center items-center">
                 <FaUser size="1.5rem" />
               </div>
@@ -86,31 +125,38 @@ export default function Home(pageProps) {
               placeholder="username"
               onChange={handleUsernameChange}
             />
-          </div>
+          </animated.div>
           <div className="m-4"></div>
-          <div className="flex flex-row justify-start items-center shadow-inner rounded-3xl bg-slate-50">
-            <div className="w-12 h-12 rounded-full flex flex-row justify-center items-center">
+          <animated.div
+            style={props2}
+            className="flex flex-row justify-start items-center w-full max-w-sm shadow-inner rounded-3xl bg-slate-50"
+          >
+            <div className="ml-4 w-12 h-12 rounded-full flex flex-row justify-center items-center">
               <div className="flex flex-col justify-center items-center">
                 <FaKey size="1.5rem" />
               </div>
             </div>
             <input
+              type="password"
               className="ml-4 bg-transparent focus:outline-none"
               value={password}
               placeholder="password"
               onChange={handlePasswordChange}
             />
-          </div>
-          <div className="mt-16 mb-4 w-full">
-            <button
+          </animated.div>
+          <animated.div style={props3} className="mt-16 mb-4 w-full max-w-sm">
+            <input
+              type="submit"
               className="text-xl  w-full py-4 text-gray-600 rounded-md bg-white bg-opacity-90 shadow-lg shadow-cyan-700"
-              onClick={handleLoginBtnClick}
-            >
-              Login
-            </button>
-          </div>
+              onClick={(e) => {
+                e.preventDefault();
+                handleLoginBtnClick(e);
+              }}
+              value={'Login'}
+            />
+          </animated.div>
           <hr className="mt-4 border-1 w-full"></hr>
-          <div className="mt-8 w-full">
+          <animated.div style={props4} className="mt-8 w-full max-w-sm">
             <Link href="/signup">
               <button
                 href="#"
@@ -119,8 +165,8 @@ export default function Home(pageProps) {
                 Sigin up
               </button>
             </Link>
-          </div>
-        </div>
+          </animated.div>
+        </form>
       </main>
     </div>
   );
