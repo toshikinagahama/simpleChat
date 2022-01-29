@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
-import { userState, messagesState } from '../../components/atoms';
+import { userState } from '../../components/atoms';
 import { useRecoilState } from 'recoil';
 import { human_icon, domain_db, http_protcol, ws_protcol } from '../../global';
 import Auth from '../../components/auth';
@@ -12,6 +12,7 @@ export default function Room(pageProps) {
   const router = useRouter();
   const [user, setUser] = useRecoilState(userState);
   const [room_users, setRoom_users] = useState([]);
+  const [typing, setTyping] = useState(false);
   const socketRef = useRef();
   const refRoom_users = useRef([]);
   const refMessageObjs = useRef([]);
@@ -194,6 +195,12 @@ export default function Room(pageProps) {
     bottomDivRef.current.scrollIntoView();
   };
 
+  const calcTextAreaHeight = (value) => {
+    let rowsNum = message_send.split('\n').length;
+    if (rowsNum >= 10) rowsNum = 10;
+    return rowsNum;
+  };
+
   return (
     <Auth>
       {user == null ? (
@@ -229,7 +236,7 @@ export default function Room(pageProps) {
                       <div className="text-xs">{messageObj.from}</div>
                       <div className="flex">
                         <div className="bg-zinc-500 text-white rounded-xl px-2 py-1 my-auto">
-                          <p className="text-sm">{messageObj.text}</p>
+                          <p className="text-sm whitespace-pre-wrap">{messageObj.text}</p>
                         </div>
                         <div className="ml-2 flex flex-col justify-end">
                           <p className="text-xs">
@@ -254,7 +261,7 @@ export default function Room(pageProps) {
                       </p>
                     </div>
                     <div className="bg-green-300 rounded-xl px-2 py-1 my-auto">
-                      <p className="text-sm">{messageObj.text}</p>
+                      <p className="text-sm whitespace-pre-wrap">{messageObj.text}</p>
                     </div>
                   </div>
                 );
@@ -264,14 +271,34 @@ export default function Room(pageProps) {
           </main>
           <div className="bg-slate-50 bg-opacity-40 sticky bottom-0 container">
             <div className="my-2">
-              <div className="flex w-full justify-end">
-                <input
-                  className="border-2 flex-grow mx-2 py-2 px-2"
+              <div className="flex w-full justify-end items-end">
+                <textarea
+                  className="border-0 rounded-xl flex-grow mx-2 py-2 px-2"
+                  rows={calcTextAreaHeight(message_send)}
                   value={message_send}
                   onChange={handleMessageChange}
+                  onCompositionStart={() => {
+                    setTyping(true);
+                  }}
+                  onCompositionEnd={() => {
+                    setTyping(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.shiftKey) {
+                      if (e.key == 'Enter') {
+                      }
+                    } else {
+                      if (!typing) {
+                        if (e.key == 'Enter') {
+                          e.preventDefault();
+                          handleSendBtnClick();
+                        }
+                      }
+                    }
+                  }}
                 />
                 <button
-                  className="text-sm w-12 bg-neutral-800 rounded-md mx-2 text-white"
+                  className="text-sm w-12 bg-neutral-800 rounded-md mx-2 py-2 text-white"
                   onClick={handleSendBtnClick}
                 >
                   送信
