@@ -10,10 +10,10 @@ GOLINT	  = golint
 GO_TEST	 = $(GO) test -v
 GO_VET	  = $(GO) vet
 GO_LDFLAGS  = -ldflags="-s -w"
-#GOOS		= linux
-GOOS        = darwin # for mac m1
-GOARCH      = arm64 # for mac m1
-#GOARCH      = amd64
+GOOS		= linux
+GOARCH      = amd64
+# GOOS        = darwin # for mac m1
+# GOARCH      = arm64 # for mac m1
 
 ### ターゲットパラメータ
 EXECUTABLES = bin/main

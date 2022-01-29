@@ -1,1 +1,2 @@
-export $(cat .env | grep -v ^# | xargs); ./bin/main
+#!/bin/ash
+export $(cat /srv/.env | grep -v ^# | xargs); ./bin/main
