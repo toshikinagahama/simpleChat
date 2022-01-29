@@ -1,19 +1,11 @@
-version: "1.0.0"
+version: "1.1.0"
 #開発環境
 dbuser: "postgres"
 dbpassword: "postgres"
 dbname: "chat_db"
 dbhost: "localhost"
 dbport: 5432
-#本番環境
-# dbuser: "postgres_user"
-# dbpassword: "wB6WZLNqdl"
-# dbname: "chat_db"
-# dbhost: "chatapp_database"
-# dbport: 5432
-
-sercretkey: "aGAP3NLVpjwCXddStc2aRT4kwBGahA"
+sercretkey: "test"
 staticpath: "./out"
-# staticpath: "/srv/myapp"
 basepath: "/chat"
 environment: 0 #開発環境 -> 0  本番環境 -> 1
