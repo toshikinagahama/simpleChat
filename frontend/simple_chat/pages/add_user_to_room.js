@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
-import { userState, messagesState } from '../components/atoms';
+import { userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import Auth from '../components/auth';
 import MyNav from '../components/nav';

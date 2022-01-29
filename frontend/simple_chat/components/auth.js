@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { userState, messagesState } from '../components/atoms';
+import { userState } from '../components/atoms';
 import { useRecoilState } from 'recoil';
 import { domain_db, http_protcol } from '../global';
 
