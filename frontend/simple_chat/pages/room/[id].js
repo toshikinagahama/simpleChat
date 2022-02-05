@@ -318,17 +318,17 @@ export default function Room(pageProps) {
                     setTyping(false);
                   }}
                   onKeyDown={(e) => {
-                    if (e.shiftKey) {
-                      if (e.key == 'Enter') {
-                      }
-                    } else {
-                      if (!typing) {
-                        if (e.key == 'Enter' && !isMobile) {
-                          e.preventDefault();
-                          handleSendBtnClick();
-                        }
-                      }
-                    }
+                    // if (e.shiftKey) {
+                    //   if (e.key == 'Enter') {
+                    //   }
+                    // } else {
+                    //   if (!typing) {
+                    //     if (e.key == 'Enter' && !isMobile) {
+                    //       e.preventDefault();
+                    //       handleSendBtnClick();
+                    //     }
+                    //   }
+                    // }
                   }}
                 />
                 <button
