@@ -116,7 +116,7 @@ export default function Home(pageProps) {
           >
             <div className="ml-4 w-12 h-12 rounded-full flex flex-row justify-center items-center">
               <div className="flex flex-col justify-center items-center">
-                <FaUser size="1.5rem" />
+                <FaUser size="1.5em" />
               </div>
             </div>
             <input
@@ -129,11 +129,11 @@ export default function Home(pageProps) {
           <div className="m-4"></div>
           <animated.div
             style={props2}
-            className="flex flex-row justify-start items-center w-full max-w-sm shadow-inner rounded-3xl bg-slate-50"
+            className="flex flex-row justify-start items-center w-full max-w-sm shadow-inner rounded-3xl bg-slate-50 overflow-hidden"
           >
             <div className="ml-4 w-12 h-12 rounded-full flex flex-row justify-center items-center">
               <div className="flex flex-col justify-center items-center">
-                <FaKey size="1.5rem" />
+                <FaKey size="1.5em" />
               </div>
             </div>
             <input
