@@ -59,7 +59,8 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 	if err != nil {
 		if ve, ok := err.(*jwtv3.ValidationError); ok {
 			if ve.Errors&jwtv3.ValidationErrorExpired != 0 {
-				return nil, fmt.Errorf("%s is expired", tokenstring)
+				//expireはみない
+				//return nil, fmt.Errorf("%s is expired", tokenstring)
 			} else {
 				return nil, fmt.Errorf("%s is invalid", tokenstring)
 			}

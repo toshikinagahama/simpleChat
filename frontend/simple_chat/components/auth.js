@@ -15,14 +15,16 @@ const Auth = ({ children }) => {
     return <div>Loading...</div>;
   }
   const token = localStorage.getItem('token');
+
   if (token == 'null') {
     router.push('/login');
-  } else {
+  } else if (token == null) {
+    router.push('/login');
   }
   useEffect(() => {
     const fetchData = async () => {
       //console.log(token);
-      if (token != 'null') {
+      if (token != 'null' && token != null) {
         setComponent(children);
         if (!isFetchData) {
           const res = await fetch(`${http_protcol}://${domain_db}/restricted/auth_user`, {
@@ -32,7 +34,7 @@ const Auth = ({ children }) => {
           }).catch(() => null);
           if (res != null) {
             const json_data = await res.json().catch(() => null);
-            // console.log(json_data);
+            console.log(json_data);
             if (json_data['result'] != null) {
               setIsFetchData(true);
               setUser(json_data['user']);
