@@ -56,7 +56,10 @@ export default function Room(pageProps) {
                   icon: tmp_user.icon,
                   timestamp: new Date(),
                 };
-                setMessageObjs([...refMessageObjs.current, m_new]);
+                let messageObjs_new = [...refMessageObjs.current, m_new];
+                messageObjs_new.sort((a, b) => a.timestamp - b.timestamp);
+                setMessageObjs(messageObjs_new);
+                if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
               } else {
                 console.log('no valid user');
               }
@@ -156,7 +159,7 @@ export default function Room(pageProps) {
                           console.log('no valid user');
                         }
                       });
-
+                      messageObjs_new.sort((a, b) => a.timestamp - b.timestamp);
                       setMessageObjs(messageObjs_new);
                     }
                   }
@@ -170,12 +173,20 @@ export default function Room(pageProps) {
       }
     };
     fetchData();
+    //console.log(bottomDivRef.current);
     if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
   }, [room, messageObjs, bottomDivRef, user, room_users]);
 
   useEffect(() => {
     refRoom_users.current = [...room_users];
   }, [room_users]);
+
+  useEffect(() => {
+    console.log(bottomDivRef);
+    setTimeout(() => {
+      if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
+    }, 100);
+  }, [isFetchData]);
 
   useEffect(() => {
     refMessageObjs.current = [...messageObjs];

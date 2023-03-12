@@ -72,7 +72,7 @@ export default function User(pageProps) {
         //return;
       }
       // 通知の許可を求める
-      Notification.requestPermission().then(() => new Notification('通知が許可になりました'));
+      Notification.requestPermission().then(() => {});
     }
     navigator.serviceWorker.register('/sw.js').then(async () => {
       console.log('hello');
