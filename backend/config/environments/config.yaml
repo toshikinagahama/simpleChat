@@ -7,5 +7,6 @@ dbhost: "localhost"
 dbport: 5432
 sercretkey: "test"
 staticpath: "./out"
-basepath: "/chat"
+basepath: ""
+#basepath: "/chat"
 environment: 0 #開発環境 -> 0  本番環境 -> 1

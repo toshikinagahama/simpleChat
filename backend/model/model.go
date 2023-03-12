@@ -25,11 +25,12 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
 
-	Name     string    `json:"name"`
-	Password string    `json:"password"`
-	Icon     string    `json:"icon" gorm:"size:100000; default:''"`
-	Rooms    []Room    `json:"rooms" gorm:"many2many:user_rooms;"`
-	Messages []Message `json:"messages"`
+	Name         string    `json:"name"`
+	Password     string    `json:"password"`
+	Subscription string    `json:"subscription" gorm:"default:''"`
+	Icon         string    `json:"icon" gorm:"size:100000; default:''"`
+	Rooms        []Room    `json:"rooms" gorm:"many2many:user_rooms;"`
+	Messages     []Message `json:"messages"`
 }
 
 type APIUser struct {
