@@ -5,3 +5,4 @@ export const http_protcol = process.env.NEXT_PUBLIC_HTTP_PROTCOL;
 export const ws_protcol = process.env.NEXT_PUBLIC_WEBSOCKET_PROTCOL;
 export const domain_db = process.env.NEXT_PUBLIC_DOMAIN_DB;
 export const domain = process.env.NEXT_PUBLIC_DOMAIN;
+export const web_push_pub_key = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;

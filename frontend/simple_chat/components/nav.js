@@ -14,7 +14,7 @@ export default function MyNav(props) {
 
   const handleLogoutBtnClick = (e) => {
     localStorage.setItem('token', null);
-    router.push('/');
+    router.push('/login');
   };
 
   const [isShowMenuContent, setIsShowMenuContent] = useState(false);

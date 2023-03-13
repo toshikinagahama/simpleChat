@@ -184,9 +184,9 @@ export default function UserSetting(pageProps) {
             <div>
               <p>あなたの名前: {user.name}</p>
             </div>
-            {/* <div>
+            <div>
               <p>あなたのID: {user.id}</p>
-            </div> */}
+            </div>
             <div className="flex flex-col justify-center items-center">
               <p className="mb-4">アイコンを変える</p>
               {user.icon == '' ? (

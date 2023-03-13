@@ -10,27 +10,37 @@ const Auth = ({ children }) => {
   const [isFetchData, setIsFetchData] = useState(false);
 
   const router = useRouter();
+  const isReady = router.isReady;
+  if (!isReady) {
+    return <div>Loading...</div>;
+  }
+  const token = localStorage.getItem('token');
+
+  if (token == 'null') {
+    router.push('/login');
+  } else if (token == null) {
+    router.push('/login');
+  }
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
-      if (token == null) router.replace('/');
-      else {
+      //console.log(token);
+      if (token != 'null' && token != null) {
         setComponent(children);
-      }
-      if (!isFetchData) {
-        const res = await fetch(`${http_protcol}://${domain_db}/restricted/auth_user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }).catch(() => null);
-        if (res != null) {
-          const json_data = await res.json().catch(() => null);
-          // console.log(json_data);
-          if (json_data['result'] != null) {
-            setIsFetchData(true);
-            setUser(json_data['user']);
-          } else {
-            router.replace('/');
+        if (!isFetchData) {
+          const res = await fetch(`${http_protcol}://${domain_db}/restricted/auth_user`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).catch(() => null);
+          if (res != null) {
+            const json_data = await res.json().catch(() => null);
+            console.log(json_data);
+            if (json_data['result'] != null) {
+              setIsFetchData(true);
+              setUser(json_data['user']);
+            } else {
+              router.replace('/');
+            }
           }
         }
       }

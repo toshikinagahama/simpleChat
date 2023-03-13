@@ -43,4 +43,4 @@ chkfmt:
 ### 実行ファイルのビルドルール
 
 bin/main:
-	env DBUSER=${DBUSER} GO111MODULE=on GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO_BUILD) $(GO_LDFLAGS) -o $@
+	env GO111MODULE=on GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO_BUILD) $(GO_LDFLAGS) -o $@

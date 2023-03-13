@@ -1,3 +1,7 @@
-module.exports = {
-  basePath: '/chat/web',
-};
+const withPWA = require('next-pwa')({
+  dest: 'public',
+});
+
+module.exports = withPWA({
+  reactStrinctMode: true,
+});

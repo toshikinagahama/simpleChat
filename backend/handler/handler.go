@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	webpush "github.com/SherClockHolmes/webpush-go"
 	jwtv3 "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/google/uuid"
@@ -58,7 +59,8 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 	if err != nil {
 		if ve, ok := err.(*jwtv3.ValidationError); ok {
 			if ve.Errors&jwtv3.ValidationErrorExpired != 0 {
-				return nil, fmt.Errorf("%s is expired", tokenstring)
+				//expireはみない
+				//return nil, fmt.Errorf("%s is expired", tokenstring)
 			} else {
 				return nil, fmt.Errorf("%s is invalid", tokenstring)
 			}
@@ -96,7 +98,6 @@ func getAuthenticate(tokenstring string) (*model.Auth, error) {
 }
 
 func Websocket(c echo.Context) error {
-
 	log.Println(c.Request())
 	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
@@ -153,20 +154,93 @@ func Websocket(c echo.Context) error {
 			delete(clients, ws)
 			break
 		}
-		if res.APIMsg.Text != "" {
-			//データベースに追加
-			message := model.Message{
-				Text:      res.APIMsg.Text,
-				ReadCount: 0,
-				UserID:    res.APIMsg.UserID,
-				RoomID:    res.APIMsg.RoomID,
-			}
+		//コマンドによって処理をわける
+		if res.Command == 1 {
+			if res.APIMsg.Text != "" {
+				//データベースに追加
+				message := model.Message{
+					Text:      res.APIMsg.Text,
+					ReadCount: 0,
+					UserID:    res.APIMsg.UserID,
+					RoomID:    res.APIMsg.RoomID,
+				}
 
-			err := db.Debug().Model(model.Message{}).Create(&message).Error
-			if err == nil {
-				broadcast <- res.APIMsg
+				err := db.Debug().Model(model.Message{}).Create(&message).Error
+				if err == nil {
+					//roomメンバーにpush通知
+					var user_rooms []model.UserRoom
+					user_ids := []uuid.UUID{}
+					err = db.Debug().Model(&model.UserRoom{}).Where("room_id = ?", uuid.UUID(res.APIMsg.RoomID)).Find(&user_rooms).Error
+					if err != nil {
+						log.Println(err)
+					}
+					for _, user_room := range user_rooms {
+						if user_room.UserID != res.APIMsg.UserID {
+							//自分以外対象。
+							user_ids = append(user_ids, user_room.UserID)
+						}
+					}
+					var room model.Room
+					err = db.Model(&model.Room{}).Find(&room, res.APIMsg.RoomID).Error //本当はsubscriptionだけ持ってくるようにしたい。iconとかいらん
+					if err != nil {
+						//ルームが見つからなかった場合
+						log.Println(err)
+					}
+					var users []model.User
+					err = db.Model(&model.User{}).Find(&users, user_ids).Error //本当はsubscriptionだけ持ってくるようにしたい。iconとかいらん
+					//subscriptionだけもらうようにする
+					if err != nil {
+						//ユーザーが見つからなかった場合
+						log.Println(err)
+					}
+					type NotificationMessage struct {
+						Title string `json:"title"`
+						Body  string `json:"body"`
+					}
+					notiMes := NotificationMessage{Title: room.Name, Body: res.APIMsg.Text}
+					jsonNotiMes, err := json.Marshal(notiMes)
+					if err != nil {
+						log.Println(err)
+					}
+					for _, user := range users {
+						if user.Subscription != "" {
+							s := &webpush.Subscription{}
+							json.Unmarshal([]byte(user.Subscription), s)
+
+							// Send Notification
+							resp, err := webpush.SendNotification(jsonNotiMes, s, &webpush.Options{
+								Subscriber:      "exevolute@gmail.com",
+								VAPIDPublicKey:  "BIleZKShlqOwnujl9wmiSeC7SyCvYYYh1luBwOI83dSxJKOCPi5lE1fTEfuFjRAzo2aNtalzNYOmylbraNViC6o",
+								VAPIDPrivateKey: "-oZIBZMp7g_RqaJn1dPNSnTtZssESucE6n0599BZPK8",
+								TTL:             30,
+							})
+							if err != nil {
+								// TODO: Handle error
+								log.Println(err)
+							}
+							log.Println(resp)
+							defer resp.Body.Close()
+						}
+
+					}
+
+					broadcast <- res.APIMsg
+				}
 			}
 		}
+		//else if res.Command == 2 {
+		//	//
+		//	//log.Println(res.APIMsg.Text)
+		//	for _, auth := range clients {
+		//		if auth.UserID == res.APIMsg.UserID {
+		//			auth.Subscription = res.APIMsg.Text
+
+		//		}
+		//	}
+		//	for _, auth := range clients {
+		//		log.Println(auth)
+		//	}
+		//}
 	}
 
 	return nil
@@ -190,6 +264,7 @@ func WebsocketMessages() {
 				client.Close()
 				delete(clients, client)
 			}
+
 		}
 	}
 }
@@ -635,29 +710,27 @@ func UpdateUser(c echo.Context) error {
 		})
 	}
 
-	icon_str := json_map["icon"].(string)
-	// icon_rawdata, _ := base64.StdEncoding.DecodeString(icon_str)
-
-	//decode image
-	// imgSrc, t, err := image.Decode(bytes.NewReader(icon_rawdata))
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return c.JSON(http.StatusOK, echo.Map{
-	// 		"result": -1,
-	// 	})
-	// }
-	// log.Println("Type of image:", t)
-
-	// //rectange of image
-	// rctSrc := imgSrc.Bounds()
-	// log.Println("Width:", rctSrc.Dx())
-	// log.Println("Height:", rctSrc.Dy())
-
-	err = db.Debug().Model(&model.User{}).Where("id = ?", id).Update("icon", icon_str).Error
-	if err != nil {
-		return c.JSON(http.StatusOK, echo.Map{
-			"result": -1,
-		})
+	//icon
+	icon_str, ok := json_map["icon"].(string)
+	if ok {
+		err = db.Debug().Model(&model.User{}).Where("id = ?", id).Update("icon", icon_str).Error
+		if err != nil {
+			return c.JSON(http.StatusOK, echo.Map{
+				"result": -1,
+			})
+		}
+	}
+	//subscription
+	subscription_str, ok := json_map["subscription"].(string)
+	if ok {
+		log.Println(subscription_str)
+		err = db.Debug().Model(&model.User{}).Where("id = ?", id).Update("subscription", subscription_str).Error
+		if err != nil {
+			log.Println(err)
+			return c.JSON(http.StatusOK, echo.Map{
+				"result": -2,
+			})
+		}
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"result": 0,
