@@ -24,6 +24,7 @@ export default function UserSetting(pageProps) {
     if (user == null) {
       return;
     }
+    console.log(`${http_protcol}://${domain}/add_user_to_room?id=${user.id}`);
 
     const fetchData = async () => {
       if (!isFetchData) {

@@ -323,7 +323,8 @@ func Login(c echo.Context) error {
 					Name:    user.Name,
 					RoomIDs: room_ids,
 					StandardClaims: jwtv3.StandardClaims{
-						ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+						//ExpiresAt: time.Now().Unix(),
+						ExpiresAt: time.Now().Add(time.Hour * 24 * 3).Unix(),
 					},
 				}
 				cfg, err := config.Load()
@@ -334,6 +335,7 @@ func Login(c echo.Context) error {
 					log.Println(err)
 					return err
 				}
+				//log.Println(t)
 
 				return c.JSON(http.StatusOK, echo.Map{
 					"token": t,

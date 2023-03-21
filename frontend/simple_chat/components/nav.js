@@ -45,7 +45,7 @@ export default function MyNav(props) {
         {isShowMenuContent && (
           <div className="animate-fade-in-down">
             <div className="text-sm lg:flex-grow">
-              <Link href="/user">
+              <Link href="/">
                 <a
                   href="#"
                   className="block mt-4 lg:inline-block lg:mt-0 text-teal-lighter hover:text-white mr-4"

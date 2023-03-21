@@ -69,82 +69,87 @@ export default function User(pageProps) {
       // 通知が許可されていたら早期リターン
       const permission = Notification.permission;
       if (permission === 'denied' || permission === 'granted') {
-        //return;
+      } else {
+        Notification.requestPermission().then(() => {});
       }
       // 通知の許可を求める
-      Notification.requestPermission().then(() => {});
     }
-    navigator.serviceWorker.register('/sw.js').then(async () => {
-      console.log('hello');
-      navigator.serviceWorker.ready.then(async (reg) => {
-        let subscription = await reg.pushManager.getSubscription();
-        console.log(JSON.stringify(subscription));
-        let data = {
-          subscription: JSON.stringify(subscription),
-        };
-        const res = await fetch(`${http_protcol}://${domain_db}/restricted/update_user`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(data),
-        }).catch(() => null);
-        if (res != null) {
-          console.log(res);
-          const json_data = await res.json().catch(() => null);
-          console.log(json_data);
-          if (json_data['result'] != null) {
-            if (json_data['result'] === 0) {
-            }
-          }
-        }
-        if (!subscription) {
-          let pubkey = web_push_pub_key;
-          let options = {
-            userVisibleOnly: true,
-            applicationServerKey: base64ToUint8Array(pubkey),
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(async () => {
+        console.log('hello');
+        navigator.serviceWorker.ready.then(async (reg) => {
+          let subscription = await reg.pushManager.getSubscription();
+          console.log(JSON.stringify(subscription));
+          let data = {
+            subscription: JSON.stringify(subscription),
           };
-          reg.pushManager.subscribe(options).then(async (sub) => {
-            console.log(sub);
-            const key = sub.getKey('p256dh');
-            const token = sub.getKey('auth');
-            const request = {
-              endpoint: sub.endpoint,
-              expirationTime: null,
-              keys: {
-                p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(key))),
-                auth: btoa(String.fromCharCode.apply(null, new Uint8Array(token))),
-              },
-            };
-            localStorage.setItem('subscription', JSON.stringify(request));
-            console.log(JSON.stringify(request));
-            let data = {
-              subscription: JSON.stringify(request),
-            };
-            const res = await fetch(`${http_protcol}://${domain_db}/restricted/update_user`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(data),
-            }).catch(() => null);
-            if (res != null) {
-              console.log(res);
-              const json_data = await res.json().catch(() => null);
-              console.log(json_data);
-              if (json_data['result'] != null) {
-                if (json_data['result'] === 0) {
-                }
+          const res = await fetch(`${http_protcol}://${domain_db}/restricted/update_user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+          }).catch(() => null);
+          if (res != null) {
+            console.log(res);
+            const json_data = await res.json().catch(() => null);
+            console.log(json_data);
+            if (json_data['result'] != null) {
+              if (json_data['result'] === 0) {
               }
             }
-          });
-        } else {
-          localStorage.setItem('subscription', JSON.stringify(subscription));
-        }
+          }
+          if (!subscription) {
+            let pubkey = web_push_pub_key;
+            let options = {
+              userVisibleOnly: true,
+              applicationServerKey: base64ToUint8Array(pubkey),
+            };
+            reg.pushManager.subscribe(options).then(async (sub) => {
+              console.log(sub);
+              const key = sub.getKey('p256dh');
+              const token = sub.getKey('auth');
+              const request = {
+                endpoint: sub.endpoint,
+                expirationTime: null,
+                keys: {
+                  p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(key))),
+                  auth: btoa(String.fromCharCode.apply(null, new Uint8Array(token))),
+                },
+              };
+              localStorage.setItem('subscription', JSON.stringify(request));
+              console.log(JSON.stringify(request));
+              let data = {
+                subscription: JSON.stringify(request),
+              };
+              const res = await fetch(`${http_protcol}://${domain_db}/restricted/update_user`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(data),
+              }).catch(() => null);
+              if (res != null) {
+                console.log(res);
+                const json_data = await res.json().catch(() => null);
+                console.log(json_data);
+                if (json_data['result'] != null) {
+                  if (json_data['result'] === 0) {
+                  }
+                }
+              }
+            });
+          } else {
+            localStorage.setItem('subscription', JSON.stringify(subscription));
+          }
+        });
+      })
+      .catch((r) => {
+        console.log(r);
       });
-    });
   }, []);
 
   return (
