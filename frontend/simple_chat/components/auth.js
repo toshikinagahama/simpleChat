@@ -9,19 +9,14 @@ const Auth = ({ children }) => {
   const [user, setUser] = useRecoilState(userState);
   const [component, setComponent] = useState(<Login />);
   const [isFetchData, setIsFetchData] = useState(false);
-  const [isValid, setIsValid] = useState(false);
 
   const router = useRouter();
   const isReady = router.isReady;
-  if (!isReady) {
-    return <Login />;
-  }
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    if (token != null && token != 'null') setIsValid(true);
+    const token = localStorage.getItem('token');
     const fetchData = async () => {
-      //console.log(token);
+      console.log(token);
       if (token != 'null' && token != null) {
         setComponent(children);
         if (!isFetchData) {
@@ -45,7 +40,6 @@ const Auth = ({ children }) => {
             }
             if (json_data['result'] != null) {
               setIsFetchData(true);
-              setIsValid(true);
               setUser(json_data['user']);
             }
           }
@@ -54,6 +48,10 @@ const Auth = ({ children }) => {
     };
     fetchData();
   }, [children, user]);
+
+  if (!isReady) {
+    return <Login />;
+  }
 
   //何もなければ次へ（そのまま処理）
   return component;

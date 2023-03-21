@@ -84,7 +84,7 @@ export default function AddFriends(pageProps) {
     if (result == 0) {
       alert('登録完了しました。お手数ですが、再度ログインし直してください。');
       localStorage.setItem('token', null);
-      router.push('/user');
+      router.push('/');
     } else {
       alert(`Result: ${result}`);
     }

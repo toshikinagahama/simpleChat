@@ -185,7 +185,7 @@ export default function Room(pageProps) {
     console.log(bottomDivRef);
     setTimeout(() => {
       if (bottomDivRef.current != null) bottomDivRef.current.scrollIntoView();
-    }, 100);
+    }, 1000);
   }, [isFetchData]);
 
   useEffect(() => {
